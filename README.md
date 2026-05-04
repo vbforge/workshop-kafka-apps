@@ -1,134 +1,108 @@
 # workshop-kafka-apps
 
-## Learning Kafka with Spring Boot & Thymeleaf
-
-This repository is my **hands‑on workshop** for mastering Apache Kafka in **KRaft mode** (no ZooKeeper) using **Spring Boot 3**, **Thymeleaf**, and Docker.
-
-The goal is not just "hello world" — but building **practical applications** that gradually cover real‑world Kafka patterns: reliable messaging, 
-stateful processing, error handling, event sourcing, dead letter queues, etc.
+> Hands-on Kafka workshop built with **Spring Boot 3**, **Thymeleaf**, and **Docker** (KRaft mode — no ZooKeeper).  
+> Each project is a standalone application targeting a real-world Kafka pattern, progressing from zero to production-ready knowledge.
 
 ---
 
-## Why this repository exists
+## Goal
 
-Kafka plays a **big role** in enterprise Java development — especially in fintech, e‑commerce, logistics, and microservices architectures. 
-However, many tutorials stop at "send and receive a string". 
+Most Kafka tutorials stop at "send and receive a string." This workshop doesn't.
 
-This workshop fills the gap by showing:
-- ✅ How to build **production‑ready** producers/consumers
-- ✅ Error handling strategies (retries, DLQ, poison pills)
-- ✅ Exactly‑once semantics, idempotent producers, commit strategies
-- ✅ Consumer rebalancing, partition awareness, state stores
-- ✅ Visual feedback via Thymeleaf + WebSocket dashboards
-
-All code runs against **Kafka in KRaft mode** (the modern, ZooKeeper‑less setup) inside Docker.
+The focus is on patterns that actually appear in production Java systems — reliable messaging, error handling, offset commit strategies, exactly-once semantics, and event sourcing. By the end, you will have practical, interview-ready knowledge of the producer/consumer API without getting lost in cluster internals or Kafka Streams DSL.
 
 ---
 
 ## Projects
 
-| # | Project                          | Key Kafka Concepts | Target Skill |
-|---|----------------------------------|--------------------|---------------|
-| 1 | [**Echo Bot**](kafka-echo-bot)                 | `KafkaTemplate`, `@KafkaListener`, auto commit, basic topics | Verify your Kafka setup works — produce and consume with a simple web form |
-| 2 | **Real‑time Dashboard**          | Consumer groups, rebalancing, in‑memory state aggregation, WebSocket streaming | Build live analytics from event streams |
-| 3 | **Order Logger with Search**     | Idempotent producer, exactly‑once semantics, offset commit to database | Decouple ingestion from storage — Kafka as reliable buffer |
-| 4 | **Event‑Sourced Shopping Cart**  | Compacted topics, state reconstruction from event log, snapshotting | Implement event sourcing pattern (auditable, replayable) |
-| 5 | **Dead Letter Queue Visualizer** | `@RetryableTopic`, error handlers, poison pills, manual DLQ replay | Handle real‑world message failures gracefully |
+| # | Project | Key Kafka Concepts |
+|---|---|---|
+| 1 | [kafka-echo-bot](kafka-echo-bot) | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation |
+| 2 | [kafka-dashboard](kafka-dashboard) | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming |
+| 3 | [kafka-order-logger](kafka-order-logger) | Idempotent producer, exactly-once semantics, `ErrorHandlingDeserializer`, offset commit to DB |
+| 4 | [kafka-shopping-cart](kafka-shopping-cart) | Compacted topics, event sourcing, state reconstruction, snapshotting |
+| 5 | [kafka-dlq-visualizer](kafka-dlq-visualizer) | `@RetryableTopic`, poison pills, manual DLQ replay, dead letter queue patterns |
 
-Each project lives separately and can run independently.
+Each project is independent. You can run any of them against a shared local Kafka instance on `localhost:9092`.
 
 ---
 
-## Tech stack
+## Tech Stack
 
-- **Java 17** (or 21)
-- **Spring Boot 3.2.x** (latest stable)
-- **Apache Kafka** (KRaft mode — no ZooKeeper)
-- **Thymeleaf** + **WebSocket** (for live UI updates)
-- **Docker** + **Docker Compose** (Kafka, optional MySql/PostgreSQL/H2)
-- **Maven**
+| Tool | Version | Purpose |
+|---|---|---|
+| Java | 17 / 21 | Application runtime |
+| Spring Boot | 3.4.x | Application framework |
+| Spring Kafka | (managed by Boot) | Kafka producer/consumer abstraction |
+| Apache Kafka | KRaft mode (no ZooKeeper) | Message broker |
+| Thymeleaf + WebSocket | (managed by Boot) | Server-side UI with live updates |
+| Docker + Docker Compose | Latest | Local Kafka + Conduktor setup |
+| Maven | 3.9+ | Build tool |
 
+---
+
+## Learning Scope
+
+This workshop is intentionally scoped. Here is exactly what will and won't be covered — and why.
+
+| Priority | Topic |
+|---|---|
+| ✅ Must | Produce and consume messages with Spring Boot |
+| ✅ Must | Topics, partitions, offsets, consumer groups |
+| ✅ Must | `application.yml` configuration for producers and consumers |
+| ✅ Must | Commit strategies: auto-commit vs manual ack |
+| ✅ Must | Error handling: retries, `ErrorHandlingDeserializer`, poison pills |
+| ✅ Must | Dead letter queues and `@RetryableTopic` |
+| ✅ Should | Idempotent producer and exactly-once semantics |
+| ✅ Should | Consumer rebalancing and partition assignment |
+| ✅ Should | Event sourcing pattern with Kafka as the event log |
+| ❌ Skip for now | Kafka Streams DSL and state stores |
+| ❌ Skip for now | Cluster administration and KRaft internals |
+| ❌ Skip for now | Schema Registry and Avro serialization |
+
+> **Rule of thumb:** master the producer/consumer API with proper error handling — that is what 90% of real projects use day to day.
+
+---
+
+## Running the Projects
+
+### Option A — Shared Kafka instance (recommended)
+
+If you already have Kafka running on `localhost:9092`, skip the per-project Docker Compose and point each app at it via `application.yml`. This is the normal development workflow once your environment is stable.
+
+### Option B — Per-project Docker Compose
+
+Each project ships its own `docker-compose.yml` with Kafka in KRaft mode and a Conduktor UI panel.
+
+```bash
+cd kafka-echo-bot
+docker compose up -d
+./mvnw spring-boot:run
+```
+
+Conduktor UI is available at `http://localhost:8085` for visual inspection of topics, consumer groups, and offsets.
+ 
 ---
 
 ## Prerequisites
 
-- Docker with Kafka in KRaft mode already running
-- Basic Spring Boot knowledge (controllers, services, `application.yml`)
-- No prior Kafka experience required
-
----
-
-## Folder structure (planned)
-
-```
-workshop-kafka-apps/
-├── README.md                     (this file)
-├── kafka-echo-bot/               (Project #1)
-├── kafka-dashboard/              (Project #2)
-├── kafka-order-logger/           (Project #3)
-├── kafka-shopping-cart/          (Project #4)
-├── kafka-dlq-visualizer/         (Project #5)
-└── other-apps-in-process
-```
-
-Each project is a **standalone Spring Boot application** with its own `pom.xml`, `docker-compose.yml` and `application.yml`.
-
----
-
-## How deep should we know Kafka?
-
-This workshop is designed according to:
-
-| Level    | Topic                                           | Required    |
-|----------|-------------------------------------------------|-------------|
-| ✅ Must   | Produce/consume with Spring Boot                | Yes         |
-| ✅ Must   | Topic, partition, offset, consumer group basics | Yes         |
-| ✅ Must   | `application.yml` configuration                 | Yes         |
-| ✅ Should | Commit strategies (auto, manual, ack mode)      | Yes         |
-| ✅ Should | Error handling (retries, DLQ)                   | Yes         |
-| ✅ Should | Idempotent producer & exactly‑once semantics    | Yes         |
-| ✅ Should | Consumer rebalancing behavior                   | Yes         |
-| ❌ Nice   | Kafka Streams DSL, state stores                 | For Middle+ |
-| ❌ Nice   | Cluster administration, KRaft internals         | For Middle+ |
-
-After completing all topics, we will have **practical, interview‑ready** knowledge.
-
----
-
-## Running the projects
-
-Each project contains its own:
-- `docker-compose.yml` 
-- `README.md` with specific run instructions
-- Example `curl` commands or UI walkthrough
-
-**Shared Kafka instance** (recommended):  
-If you already have Kafka running in Docker on `localhost:9092`, simply reuse it across all projects.
-
----
-
-## Learning philosophy
-
-> **Don't go deep into Kafka Streams or cluster internals now. Master the producer/consumer API + error patterns — that's what real projects use daily.**
-
-Each project takes **time** and includes:
-- Step‑by‑step code walkthrough
-- Expected output (screenshots where relevant)
-- Common pitfalls and how to fix them
+- Docker Desktop running
+- Java 17 or 21 installed
+- Maven 3.9+ (or use the `./mvnw` wrapper)
+- Basic Spring Boot knowledge: controllers, services, `application.yml`
+- No prior Kafka experience required — that is what this workshop is for
 
 ---
 
 ## Resources
 
+- [Spring for Apache Kafka — Reference Docs](https://docs.spring.io/spring-kafka/reference/)
 - [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
-- [Spring for Apache Kafka](https://docs.spring.io/spring-kafka/reference/)
-- [Kafka in KRaft mode](https://developer.confluent.io/courses/kraft/kraft-intro/)
+- [Kafka in KRaft mode — Confluent Developer](https://developer.confluent.io/courses/kraft/kraft-intro/)
+- [Confluent cp-kafka Docker image](https://hub.docker.com/r/confluentinc/cp-kafka)
 
 ---
 
 ## Author
 
-**vbforge**
-[](https://github.com/vbforge)
-
----
+**vbforge** — [github.com/vbforge](https://github.com/vbforge)
