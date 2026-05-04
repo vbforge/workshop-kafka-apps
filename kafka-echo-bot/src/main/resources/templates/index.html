@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Kafka Echo Bot</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        input {
+            width: 70%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        button:hover { background: #2980b9; }
+        .messages {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+        .message-item {
+            background: #ecf0f1;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .live {
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- SockJS & STOMP -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>🐘 Kafka Echo Bot</h1>
+    <p>Send a message → Kafka → Receive back live</p>
+
+    <form action="/send" method="post" id="messageForm">
+        <input type="text" name="message" placeholder="Type your message here..." required>
+        <button type="submit">Send via HTTP</button>
+    </form>
+
+    <div id="liveAlert" style="display:none;" class="live">
+        🎉 New message received live: <strong id="liveMessage"></strong>
+    </div>
+
+    <div class="messages">
+        <h3>📬 Recent messages (last 10)</h3>
+        <div id="messageList">
+            <div th:each="msg : ${recentMessages}" th:text="${msg}" class="message-item"></div>
+            <div th:if="${recentMessages.empty}">No messages yet. Send your first!</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var stompClient = null;
+
+    function connectWebSocket() {
+        var socket = new SockJS('/ws-echo');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function(frame) {
+            console.log('Connected to WebSocket: ' + frame);
+            stompClient.subscribe('/topic/messages', function(message) {
+                showLiveMessage(message.body);
+                addMessageToList(message.body);
+            });
+        });
+    }
+
+    function showLiveMessage(msg) {
+        var alertDiv = document.getElementById('liveAlert');
+        document.getElementById('liveMessage').innerText = msg;
+        alertDiv.style.display = 'block';
+        setTimeout(function() {
+            alertDiv.style.display = 'none';
+        }, 3000);
+    }
+
+    function addMessageToList(msg) {
+        var listDiv = document.getElementById('messageList');
+        var newMsg = document.createElement('div');
+        var now = new Date();
+        var timestamp = now.toLocaleTimeString();
+        newMsg.className = 'message-item';
+        newMsg.innerText = msg + ' [received at ' + timestamp + ']';
+        listDiv.insertBefore(newMsg, listDiv.firstChild);
+
+        // Keep only last 10
+        while(listDiv.children.length > 10) {
+            listDiv.removeChild(listDiv.lastChild);
+        }
+    }
+
+    window.onload = function() {
+        connectWebSocket();
+    };
+</script>
+</body>
+</html>
