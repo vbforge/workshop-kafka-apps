@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: kafka-dashboard
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        acks: all
+        retries: 3
+        # Do NOT embed type headers — consumers use VALUE_DEFAULT_TYPE instead.
+        # This avoids ClassNotFoundException when the deserializer gets a type
+        # header pointing to a class it cannot resolve.
+        spring.json.add.type.headers: false
+
+    consumer:
+      # Group ID, deserializer class, and ack mode are all configured per-factory
+      # in KafkaConfig.java — not here. Putting them here would create a second
+      # auto-configured consumer factory that conflicts with the explicit ones.
+      # Only the bootstrap-servers default is inherited from spring.kafka above.
+      auto-offset-reset: earliest
+
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
+
+app:
+  kafka:
+    topic: dashboard-events
+    aggregator-group: dashboard-aggregator-group
+    audit-group: dashboard-audit-group

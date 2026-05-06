@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAFKA // DASHBOARD</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <!--
+        NO SockJS — native WebSocket only.
+        StompJs connects directly via ws:// without the /info probe that was
+        causing the permanent "CONNECTING..." state on Spring Boot 3.x.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg:        #080c10;
+            --surface:   #0d1117;
+            --border:    #1a2a1a;
+            --green:     #00ff41;
+            --green-dim: #00cc33;
+            --green-dark:#003308;
+            --amber:     #ffb000;
+            --red:       #ff3333;
+            --cyan:      #00e5ff;
+            --text:      #a0c8a0;
+            --text-dim:  #4a6a4a;
+            --glow:      0 0 8px rgba(0,255,65,0.4);
+            --glow-lg:   0 0 20px rgba(0,255,65,0.2);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 13px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                    0deg, transparent, transparent 2px,
+                    rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--green);
+            text-shadow: var(--glow);
+            letter-spacing: 4px;
+        }
+        .logo span { color: var(--text-dim); font-weight: 400; }
+
+        .status-bar { display: flex; gap: 24px; align-items: center; font-size: 11px; color: var(--text-dim); }
+
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green); box-shadow: var(--glow);
+            animation: pulse 2s infinite; display: inline-block; margin-right: 6px;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            padding: 16px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .panel::before {
+            content: ''; position: absolute; top:0; left:0; right:0; height:1px;
+            background: linear-gradient(90deg, transparent, var(--green-dim), transparent);
+            opacity: 0.5;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 9px; font-weight: 700;
+            letter-spacing: 3px; color: var(--text-dim);
+            text-transform: uppercase; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .panel-title::before { content: '//'; color: var(--green-dim); }
+
+        .big-stat {
+            font-family: 'Orbitron', monospace;
+            font-size: 48px; font-weight: 900;
+            color: var(--green); text-shadow: var(--glow-lg);
+            line-height: 1; letter-spacing: -2px;
+        }
+        .big-stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; margin-top: 6px; }
+
+        .partition-list { display: flex; flex-direction: column; gap: 10px; }
+        .partition-row  { display: flex; flex-direction: column; gap: 4px; }
+        .partition-header { display: flex; justify-content: space-between; font-size: 11px; }
+        .partition-name  { color: var(--cyan); }
+        .partition-count { color: var(--green); }
+        .bar-track { height: 6px; background: var(--green-dark); border-radius: 1px; overflow: hidden; }
+        .bar-fill  {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-dim), var(--green));
+            border-radius: 1px; transition: width 0.6s ease; min-width: 0;
+        }
+
+        .category-grid { display: flex; flex-direction: column; gap: 8px; }
+        .category-row  { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--border); border-radius: 2px; }
+        .cat-info  { border-left: 2px solid var(--cyan); }
+        .cat-warn  { border-left: 2px solid var(--amber); }
+        .cat-error { border-left: 2px solid var(--red); }
+        .cat-label { font-size: 11px; letter-spacing: 1px; }
+        .cat-info .cat-label  { color: var(--cyan); }
+        .cat-warn .cat-label  { color: var(--amber); }
+        .cat-error .cat-label { color: var(--red); }
+        .cat-count { font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 700; color: var(--green); }
+
+        .sender-list { display: flex; flex-direction: column; gap: 6px; }
+        .sender-row  { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); }
+        .sender-rank  { color: var(--text-dim); width: 20px; font-size: 11px; }
+        .sender-name  { color: var(--text); flex: 1; padding-left: 8px; }
+        .sender-count { color: var(--green); font-family: 'Orbitron', monospace; font-size: 12px; }
+
+        .rate-display { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+        .rate-number  { font-family: 'Orbitron', monospace; font-size: 36px; font-weight: 700; color: var(--amber); text-shadow: 0 0 12px rgba(255,176,0,0.5); }
+        .rate-unit    { color: var(--text-dim); font-size: 11px; }
+
+        .offset-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .offset-table th { color: var(--text-dim); text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); font-weight: normal; letter-spacing: 1px; }
+        .offset-table td { padding: 5px 8px; border-bottom: 1px solid rgba(26,42,26,0.5); }
+        .offset-table td:first-child { color: var(--cyan); }
+        .offset-table td:last-child  { font-family: 'Orbitron', monospace; color: var(--green); text-align: right; }
+
+        .audit-panel { grid-column: 1 / -1; }
+        .audit-feed  { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+        .audit-feed::-webkit-scrollbar { width: 4px; }
+        .audit-feed::-webkit-scrollbar-track { background: var(--bg); }
+        .audit-feed::-webkit-scrollbar-thumb { background: var(--border); }
+
+        .audit-entry {
+            display: grid;
+            grid-template-columns: 70px 80px 60px 80px 1fr;
+            gap: 8px; padding: 5px 8px;
+            border-left: 2px solid transparent;
+            font-size: 11px; align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+        .audit-entry.cat-INFO  { border-left-color: var(--cyan);  background: rgba(0,229,255,0.03); }
+        .audit-entry.cat-WARN  { border-left-color: var(--amber); background: rgba(255,176,0,0.03); }
+        .audit-entry.cat-ERROR { border-left-color: var(--red);   background: rgba(255,51,51,0.04); }
+
+        .audit-partition { color: var(--cyan); font-family: 'Orbitron', monospace; font-size: 10px; }
+        .audit-offset    { color: var(--text-dim); font-size: 10px; }
+        .audit-cat       { font-size: 10px; letter-spacing: 1px; }
+        .audit-cat.INFO  { color: var(--cyan);  }
+        .audit-cat.WARN  { color: var(--amber); }
+        .audit-cat.ERROR { color: var(--red);   }
+        .audit-sender    { color: var(--green-dim); }
+        .audit-content   { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .audit-header {
+            display: grid; grid-template-columns: 70px 80px 60px 80px 1fr;
+            gap: 8px; padding: 4px 8px; font-size: 10px;
+            color: var(--text-dim); letter-spacing: 1px;
+            border-bottom: 1px solid var(--border); margin-bottom: 4px;
+        }
+
+        .producer-panel { grid-column: 1 / -1; }
+        .producer-form  { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+        .field          { display: flex; flex-direction: column; gap: 5px; }
+        .field label    { font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; }
+        .field input, .field select {
+            background: var(--bg); border: 1px solid var(--border);
+            color: var(--green); font-family: 'Share Tech Mono', monospace;
+            font-size: 13px; padding: 8px 12px; border-radius: 2px; outline: none; transition: border-color 0.2s;
+        }
+        .field input:focus, .field select:focus { border-color: var(--green-dim); box-shadow: 0 0 6px rgba(0,255,65,0.15); }
+        .field input::placeholder { color: var(--text-dim); }
+        .field-sender   { flex: 0 0 160px; }
+        .field-content  { flex: 1 1 300px; }
+        .field-category { flex: 0 0 120px; }
+
+        .send-btn {
+            background: var(--green-dark); border: 1px solid var(--green-dim);
+            color: var(--green); font-family: 'Orbitron', monospace;
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            padding: 9px 20px; cursor: pointer; border-radius: 2px;
+            text-transform: uppercase; transition: all 0.2s; align-self: flex-end;
+        }
+        .send-btn:hover  { background: rgba(0,255,65,0.15); box-shadow: var(--glow); }
+        .send-btn:active { transform: scale(0.97); }
+
+        #flash {
+            position: fixed; top: 60px; right: 20px;
+            padding: 8px 16px; background: var(--green-dark);
+            border: 1px solid var(--green-dim); color: var(--green);
+            font-size: 11px; border-radius: 2px; display: none;
+            animation: fadeIn 0.3s ease; z-index: 100;
+        }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+        .empty-state { color: var(--text-dim); font-size: 11px; padding: 20px 0; text-align: center; letter-spacing: 2px; }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">KAFKA <span>//</span> DASHBOARD</div>
+    <div class="status-bar">
+        <span><span class="status-dot"></span>CONNECTED</span>
+        <span id="ws-status">WS: CONNECTING...</span>
+        <span id="clock"></span>
+    </div>
+</header>
+
+<div id="flash"></div>
+
+<!-- Producer -->
+<div class="grid" style="padding-bottom:0">
+    <div class="panel producer-panel">
+        <div class="panel-title">PRODUCE EVENT</div>
+        <div class="producer-form">
+            <div class="field field-sender">
+                <label>Sender</label>
+                <input type="text" id="f-sender" placeholder="alice" maxlength="32">
+            </div>
+            <div class="field field-content">
+                <label>Content</label>
+                <input type="text" id="f-content" placeholder="message payload..." maxlength="200">
+            </div>
+            <div class="field field-category">
+                <label>Category</label>
+                <select id="f-category">
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                </select>
+            </div>
+            <button class="send-btn" onclick="sendEvent()">► SEND</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats grid -->
+<div class="grid">
+
+    <!-- Total events — pre-filled by Thymeleaf, updated by WS -->
+    <div class="panel">
+        <div class="panel-title">TOTAL EVENTS</div>
+        <div class="big-stat" id="stat-total"
+             th:text="${initialStats.totalEvents}">0</div>
+        <div class="big-stat-label">MESSAGES CONSUMED</div>
+    </div>
+
+    <!-- Rolling rate -->
+    <div class="panel">
+        <div class="panel-title">ROLLING RATE</div>
+        <div class="rate-display">
+            <div class="rate-number" id="stat-rate"
+                 th:text="${initialStats.eventsLastMinute}">0</div>
+            <div class="rate-unit">events / 60s</div>
+        </div>
+    </div>
+
+    <!-- By category — pre-filled by Thymeleaf -->
+    <div class="panel">
+        <div class="panel-title">BY CATEGORY</div>
+        <div class="category-grid">
+            <div class="category-row cat-info">
+                <span class="cat-label">INFO</span>
+                <span class="cat-count" id="cat-INFO"
+                      th:text="${initialStats.eventsPerCategory['INFO']} ?: 0">0</span>
+            </div>
+            <div class="category-row cat-warn">
+                <span class="cat-label">WARN</span>
+                <span class="cat-count" id="cat-WARN"
+                      th:text="${initialStats.eventsPerCategory['WARN']} ?: 0">0</span>
+            </div>
+            <div class="category-row cat-error">
+                <span class="cat-label">ERROR</span>
+                <span class="cat-count" id="cat-ERROR"
+                      th:text="${initialStats.eventsPerCategory['ERROR']} ?: 0">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Partition distribution — pre-filled by Thymeleaf -->
+    <div class="panel">
+        <div class="panel-title">PARTITION DISTRIBUTION</div>
+        <div class="partition-list">
+            <div th:each="i : ${#numbers.sequence(0, 2)}" class="partition-row">
+                <div class="partition-header">
+                    <span class="partition-name" th:text="'partition-' + ${i}">partition-0</span>
+                    <span class="partition-count"
+                          th:id="'p' + ${i} + '-count'"
+                          th:text="${initialStats.eventsPerPartition['partition-' + i]} ?: 0">0</span>
+                </div>
+                <div class="bar-track">
+                    <div th:id="'p' + ${i} + '-bar'"
+                         class="bar-fill"
+                         th:style="${initialStats.totalEvents > 0}
+                             ? 'width:' + (${(initialStats.eventsPerPartition['partition-' + i] ?: 0) * 100 / initialStats.totalEvents}) + '%'
+                             : 'width:0%'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top senders — pre-filled by Thymeleaf -->
+    <div class="panel">
+        <div class="panel-title">TOP SENDERS</div>
+        <div class="sender-list" id="sender-list">
+            <div th:if="${initialStats.topSenders.isEmpty()}" class="empty-state">NO DATA YET</div>
+            <div th:each="entry, stat : ${initialStats.topSenders}" class="sender-row">
+                <span class="sender-rank" th:text="${stat.index + 1} + '.'">1.</span>
+                <span class="sender-name"  th:text="${entry.key}">—</span>
+                <span class="sender-count" th:text="${entry.value}">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Consumer group offsets — pre-filled by Thymeleaf -->
+    <div class="panel">
+        <div class="panel-title">CONSUMER GROUP OFFSETS</div>
+        <table class="offset-table">
+            <thead>
+            <tr>
+                <th>GROUP : PARTITION</th>
+                <th style="text-align:right">OFFSET</th>
+            </tr>
+            </thead>
+            <tbody id="offset-tbody">
+            <tr th:if="${initialStats.consumerGroupOffsets.isEmpty()}">
+                <td colspan="2" style="color:var(--text-dim);padding:12px 8px;text-align:center;font-size:11px;">WAITING FOR DATA</td>
+            </tr>
+            <tr th:each="entry : ${initialStats.consumerGroupOffsets}">
+                <td th:text="${entry.key}">—</td>
+                <td th:text="${entry.value}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Live audit feed — pre-filled by Thymeleaf -->
+    <div class="panel audit-panel">
+        <div class="panel-title">
+            LIVE EVENT FEED — AUDIT GROUP
+            <span style="margin-left:8px;color:var(--green-dim);font-size:9px;">(partition · offset · category · sender · content)</span>
+        </div>
+        <div class="audit-header">
+            <span>PARTITION</span><span>OFFSET</span><span>CAT</span><span>SENDER</span><span>CONTENT</span>
+        </div>
+        <div class="audit-feed" id="audit-feed">
+            <div th:if="${initialAudit.isEmpty()}" class="empty-state">AWAITING EVENTS...</div>
+            <div th:each="entry : ${initialAudit}"
+                 th:class="'audit-entry cat-' + ${entry.category}">
+                <span class="audit-partition" th:text="'P' + ${entry.partition}">P0</span>
+                <span class="audit-offset"    th:text="'@' + ${entry.offset}">@0</span>
+                <span th:class="'audit-cat ' + ${entry.category}" th:text="${entry.category}">INFO</span>
+                <span class="audit-sender"    th:text="${entry.sender}">—</span>
+                <span class="audit-content"   th:text="${entry.content}">—</span>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /grid -->
+
+<script>
+    // ── Clock ──────────────────────────────────────────────────────────────
+    function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }
+    setInterval(tick, 1000); tick();
+
+    // ── Keep track of latest offsets to avoid duplicates ───────────────────
+    let latestOffsets = new Map(); // key: "partition-offset" → true
+
+    // ── Native WebSocket STOMP client ──────────────────────────────────────
+    var stompClient = new StompJs.Client({
+        brokerURL: 'ws://' + window.location.host + '/ws-dashboard',
+        reconnectDelay: 3000,
+
+        onConnect: function(frame) {
+            document.getElementById('ws-status').textContent = 'WS: LIVE';
+
+            stompClient.subscribe('/topic/stats', function(msg) {
+                updateStats(JSON.parse(msg.body));
+            });
+
+            stompClient.subscribe('/topic/audit', function(msg) {
+                updateAuditFeedIncremental(JSON.parse(msg.body));
+            });
+        },
+
+        onDisconnect: function() {
+            document.getElementById('ws-status').textContent = 'WS: RECONNECTING...';
+        },
+
+        onStompError: function(frame) {
+            console.error('STOMP error:', frame);
+            document.getElementById('ws-status').textContent = 'WS: ERROR';
+        }
+    });
+
+    stompClient.activate();
+
+    // ── Stats update (called on every WS push) ─────────────────────────────
+    function updateStats(stats) {
+        document.getElementById('stat-total').textContent = stats.totalEvents;
+        document.getElementById('stat-rate').textContent  = stats.eventsLastMinute;
+
+        var cats = stats.eventsPerCategory || {};
+        document.getElementById('cat-INFO').textContent  = cats['INFO']  || 0;
+        document.getElementById('cat-WARN').textContent  = cats['WARN']  || 0;
+        document.getElementById('cat-ERROR').textContent = cats['ERROR'] || 0;
+
+        var parts = stats.eventsPerPartition || {};
+        var total = stats.totalEvents || 1;
+        for (var i = 0; i < 3; i++) {
+            var count = parts['partition-' + i] || 0;
+            var pct   = Math.min(100, Math.round((count / total) * 100));
+            document.getElementById('p' + i + '-count').textContent  = count;
+            document.getElementById('p' + i + '-bar').style.width    = pct + '%';
+        }
+
+        var entries = Object.entries(stats.topSenders || {});
+        var senderList = document.getElementById('sender-list');
+        senderList.innerHTML = entries.length === 0
+            ? '<div class="empty-state">NO DATA YET</div>'
+            : entries.map(function(e, i) {
+                return '<div class="sender-row">' +
+                    '<span class="sender-rank">' + (i+1) + '.</span>' +
+                    '<span class="sender-name">'  + esc(e[0]) + '</span>' +
+                    '<span class="sender-count">' + e[1] + '</span>' +
+                    '</div>';
+            }).join('');
+
+        var offsets = Object.entries(stats.consumerGroupOffsets || {}).sort();
+        var tbody = document.getElementById('offset-tbody');
+        tbody.innerHTML = offsets.length === 0
+            ? '<tr><td colspan="2" style="color:var(--text-dim);padding:12px 8px;text-align:center;font-size:11px;">WAITING FOR DATA</td></tr>'
+            : offsets.map(function(e) {
+                return '<tr><td>' + esc(e[0]) + '</td><td>' + e[1] + '</td></tr>';
+            }).join('');
+    }
+
+    // ── INCREMENTAL audit feed update (no blinking!) ───────────────────────
+    function updateAuditFeedIncremental(entries) {
+        if (!entries || entries.length === 0) return;
+
+        var feed = document.getElementById('audit-feed');
+        var maxEntries = 50; // Keep at most this many visible
+
+        // Add new entries that we haven't seen before (from oldest to newest)
+        // Since entries come in as a full snapshot (latest first), we need to
+        // check each against our seen set and add if new.
+
+        for (var i = 0; i < entries.length; i++) {
+            var e = entries[i];
+            var key = e.partition + '-' + e.offset;
+
+            if (!latestOffsets.has(key)) {
+                // New message! Add it to the DOM
+                latestOffsets.set(key, true);
+
+                var cat = e.category || 'INFO';
+                var newEntry = document.createElement('div');
+                newEntry.className = 'audit-entry cat-' + esc(cat);
+                newEntry.innerHTML =
+                    '<span class="audit-partition">P'  + e.partition + '</span>' +
+                    '<span class="audit-offset">@'     + e.offset    + '</span>' +
+                    '<span class="audit-cat ' + esc(cat) + '">' + esc(cat) + '</span>' +
+                    '<span class="audit-sender">'  + esc(e.sender  || '—') + '</span>' +
+                    '<span class="audit-content">' + esc(e.content || '—') + '</span>';
+
+                // Add to top (newest first)
+                feed.insertBefore(newEntry, feed.firstChild);
+            }
+        }
+
+        // Remove old entries if we exceed maxEntries
+        while (feed.children.length > maxEntries) {
+            var oldest = feed.lastChild;
+            if (oldest && !oldest.classList.contains('empty-state')) {
+                // Extract partition-offset key and remove from tracking
+                var partitionSpan = oldest.querySelector('.audit-partition');
+                var offsetSpan = oldest.querySelector('.audit-offset');
+                if (partitionSpan && offsetSpan) {
+                    var p = partitionSpan.textContent.replace('P', '');
+                    var o = offsetSpan.textContent.replace('@', '');
+                    var key = p + '-' + o;
+                    latestOffsets.delete(key);
+                }
+                feed.removeChild(oldest);
+            }
+        }
+
+        // Remove empty-state if it exists and we have data now
+        var emptyState = feed.querySelector('.empty-state');
+        if (emptyState && feed.children.length > 0 && feed.children[0] !== emptyState) {
+            emptyState.remove();
+        }
+    }
+
+    // ── Populate initial audit feed from Thymeleaf (keeps CSS animation) ───
+    function populateInitialAudit() {
+        var feed = document.getElementById('audit-feed');
+        var initialEntries = feed.querySelectorAll('.audit-entry');
+
+        // Record initial entries in latestOffsets to prevent duplicates
+        initialEntries.forEach(function(entry) {
+            var partitionSpan = entry.querySelector('.audit-partition');
+            var offsetSpan = entry.querySelector('.audit-offset');
+            if (partitionSpan && offsetSpan) {
+                var p = partitionSpan.textContent.replace('P', '');
+                var o = offsetSpan.textContent.replace('@', '');
+                latestOffsets.set(p + '-' + o, true);
+            }
+        });
+    }
+
+    // ── Send event ─────────────────────────────────────────────────────────
+    function sendEvent() {
+        var sender   = document.getElementById('f-sender').value.trim();
+        var content  = document.getElementById('f-content').value.trim();
+        var category = document.getElementById('f-category').value;
+        if (!sender)  { flash('SENDER REQUIRED', true);  return; }
+        if (!content) { flash('CONTENT REQUIRED', true); return; }
+
+        fetch('/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ sender, content, category }).toString()
+        })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.status === 'sent') {
+                    flash('► SENT — ' + d.sender + ' [' + d.category + ']', false);
+                    document.getElementById('f-content').value = '';
+                } else {
+                    flash('ERROR: ' + (d.message || 'unknown'), true);
+                }
+            })
+            .catch(function() { flash('NETWORK ERROR', true); });
+    }
+
+    document.getElementById('f-content').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') sendEvent();
+    });
+
+    function flash(msg, isError) {
+        var el = document.getElementById('flash');
+        el.textContent     = msg;
+        el.style.display   = 'block';
+        el.style.borderColor = isError ? 'var(--red)'       : 'var(--green-dim)';
+        el.style.color       = isError ? 'var(--red)'       : 'var(--green)';
+        el.style.background  = isError ? 'rgba(255,51,51,0.1)' : 'var(--green-dark)';
+        clearTimeout(flash._t);
+        flash._t = setTimeout(function() { el.style.display = 'none'; }, 3000);
+    }
+
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Initialize on page load ───────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', function() {
+        populateInitialAudit();
+    });
+</script>
+
+<!--<script>-->
+<!--    // ── Clock ──────────────────────────────────────────────────────────────-->
+<!--    function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }-->
+<!--    setInterval(tick, 1000); tick();-->
+
+<!--    // ── Native WebSocket STOMP client (no SockJS) ──────────────────────────-->
+<!--    //-->
+<!--    // Previously: new SockJS('/ws-echo') → caused permanent CONNECTING... on Spring Boot 3.x-->
+<!--    // because SockJS probes /ws-dashboard/info first, and that HTTP request was-->
+<!--    // blocked by Spring's filter chain.-->
+<!--    //-->
+<!--    // Now: StompJs.Client with native WebSocket URL (ws:// protocol).-->
+<!--    // The browser upgrades directly — no HTTP probe, no filter chain issue.-->
+
+<!--    var stompClient = new StompJs.Client({-->
+<!--        brokerURL: 'ws://' + window.location.host + '/ws-dashboard',-->
+<!--        reconnectDelay: 3000,-->
+
+<!--        onConnect: function(frame) {-->
+<!--            document.getElementById('ws-status').textContent = 'WS: LIVE';-->
+
+<!--            stompClient.subscribe('/topic/stats', function(msg) {-->
+<!--                updateStats(JSON.parse(msg.body));-->
+<!--            });-->
+
+<!--            stompClient.subscribe('/topic/audit', function(msg) {-->
+<!--                updateAuditFeed(JSON.parse(msg.body));-->
+<!--            });-->
+<!--        },-->
+
+<!--        onDisconnect: function() {-->
+<!--            document.getElementById('ws-status').textContent = 'WS: RECONNECTING...';-->
+<!--        },-->
+
+<!--        onStompError: function(frame) {-->
+<!--            console.error('STOMP error:', frame);-->
+<!--            document.getElementById('ws-status').textContent = 'WS: ERROR';-->
+<!--        }-->
+<!--    });-->
+
+<!--    stompClient.activate();-->
+
+<!--    // ── Stats update (called on every WS push) ─────────────────────────────-->
+<!--    function updateStats(stats) {-->
+<!--        document.getElementById('stat-total').textContent = stats.totalEvents;-->
+<!--        document.getElementById('stat-rate').textContent  = stats.eventsLastMinute;-->
+
+<!--        var cats = stats.eventsPerCategory || {};-->
+<!--        document.getElementById('cat-INFO').textContent  = cats['INFO']  || 0;-->
+<!--        document.getElementById('cat-WARN').textContent  = cats['WARN']  || 0;-->
+<!--        document.getElementById('cat-ERROR').textContent = cats['ERROR'] || 0;-->
+
+<!--        var parts = stats.eventsPerPartition || {};-->
+<!--        var total = stats.totalEvents || 1;-->
+<!--        for (var i = 0; i < 3; i++) {-->
+<!--            var count = parts['partition-' + i] || 0;-->
+<!--            var pct   = Math.min(100, Math.round((count / total) * 100));-->
+<!--            document.getElementById('p' + i + '-count').textContent  = count;-->
+<!--            document.getElementById('p' + i + '-bar').style.width    = pct + '%';-->
+<!--        }-->
+
+<!--        var entries = Object.entries(stats.topSenders || {});-->
+<!--        var senderList = document.getElementById('sender-list');-->
+<!--        senderList.innerHTML = entries.length === 0-->
+<!--            ? '<div class="empty-state">NO DATA YET</div>'-->
+<!--            : entries.map(function(e, i) {-->
+<!--                return '<div class="sender-row">' +-->
+<!--                    '<span class="sender-rank">' + (i+1) + '.</span>' +-->
+<!--                    '<span class="sender-name">'  + esc(e[0]) + '</span>' +-->
+<!--                    '<span class="sender-count">' + e[1] + '</span>' +-->
+<!--                    '</div>';-->
+<!--            }).join('');-->
+
+<!--        var offsets = Object.entries(stats.consumerGroupOffsets || {}).sort();-->
+<!--        var tbody = document.getElementById('offset-tbody');-->
+<!--        tbody.innerHTML = offsets.length === 0-->
+<!--            ? '<tr><td colspan="2" style="color:var(&#45;&#45;text-dim);padding:12px 8px;text-align:center;font-size:11px;">WAITING FOR DATA</td></tr>'-->
+<!--            : offsets.map(function(e) {-->
+<!--                return '<tr><td>' + esc(e[0]) + '</td><td>' + e[1] + '</td></tr>';-->
+<!--            }).join('');-->
+<!--    }-->
+
+<!--    // ── Audit feed update ──────────────────────────────────────────────────-->
+<!--    function updateAuditFeed(entries) {-->
+<!--        if (!entries || entries.length === 0) return;-->
+<!--        document.getElementById('audit-feed').innerHTML = entries.map(function(e) {-->
+<!--            var cat = e.category || 'INFO';-->
+<!--            return '<div class="audit-entry cat-' + esc(cat) + '">' +-->
+<!--                '<span class="audit-partition">P'  + e.partition + '</span>' +-->
+<!--                '<span class="audit-offset">@'     + e.offset    + '</span>' +-->
+<!--                '<span class="audit-cat ' + esc(cat) + '">' + esc(cat) + '</span>' +-->
+<!--                '<span class="audit-sender">'  + esc(e.sender  || '—') + '</span>' +-->
+<!--                '<span class="audit-content">' + esc(e.content || '—') + '</span>' +-->
+<!--                '</div>';-->
+<!--        }).join('');-->
+<!--    }-->
+
+<!--    // ── Send event ─────────────────────────────────────────────────────────-->
+<!--    function sendEvent() {-->
+<!--        var sender   = document.getElementById('f-sender').value.trim();-->
+<!--        var content  = document.getElementById('f-content').value.trim();-->
+<!--        var category = document.getElementById('f-category').value;-->
+<!--        if (!sender)  { flash('SENDER REQUIRED', true);  return; }-->
+<!--        if (!content) { flash('CONTENT REQUIRED', true); return; }-->
+
+<!--        fetch('/send', {-->
+<!--            method: 'POST',-->
+<!--            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },-->
+<!--            body: new URLSearchParams({ sender, content, category }).toString()-->
+<!--        })-->
+<!--            .then(function(r) { return r.json(); })-->
+<!--            .then(function(d) {-->
+<!--                if (d.status === 'sent') {-->
+<!--                    flash('► SENT — ' + d.sender + ' [' + d.category + ']', false);-->
+<!--                    document.getElementById('f-content').value = '';-->
+<!--                } else {-->
+<!--                    flash('ERROR: ' + (d.message || 'unknown'), true);-->
+<!--                }-->
+<!--            })-->
+<!--            .catch(function() { flash('NETWORK ERROR', true); });-->
+<!--    }-->
+
+<!--    document.getElementById('f-content').addEventListener('keydown', function(e) {-->
+<!--        if (e.key === 'Enter') sendEvent();-->
+<!--    });-->
+
+<!--    function flash(msg, isError) {-->
+<!--        var el = document.getElementById('flash');-->
+<!--        el.textContent     = msg;-->
+<!--        el.style.display   = 'block';-->
+<!--        el.style.borderColor = isError ? 'var(&#45;&#45;red)'       : 'var(&#45;&#45;green-dim)';-->
+<!--        el.style.color       = isError ? 'var(&#45;&#45;red)'       : 'var(&#45;&#45;green)';-->
+<!--        el.style.background  = isError ? 'rgba(255,51,51,0.1)' : 'var(&#45;&#45;green-dark)';-->
+<!--        clearTimeout(flash._t);-->
+<!--        flash._t = setTimeout(function() { el.style.display = 'none'; }, 3000);-->
+<!--    }-->
+
+<!--    function esc(s) {-->
+<!--        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');-->
+<!--    }-->
+<!--</script>-->
+</body>
+</html>
