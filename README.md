@@ -15,13 +15,14 @@ The focus is on patterns that actually appear in production Java systems — rel
 
 ## Projects
 
-| # | Project                                      | Key Kafka Concepts |
-|---|----------------------------------------------|---|
-| 1 | [kafka-echo-bot](kafka-echo-bot/README.md)   | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation |
-| 2 | [kafka-dashboard](kafka-dashboard/README.md)           | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming |
-| 3 | [kafka-order-logger](kafka-order-logger)     | Idempotent producer, exactly-once semantics, `ErrorHandlingDeserializer`, offset commit to DB |
-| 4 | [kafka-shopping-cart](kafka-shopping-cart)   | Compacted topics, event sourcing, state reconstruction, snapshotting |
-| 5 | [kafka-dlq-visualizer](kafka-dlq-visualizer) | `@RetryableTopic`, poison pills, manual DLQ replay, dead letter queue patterns |
+| # | Project                                                          | Key Kafka Concepts                                                                                                                                                            |
+|---|------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | [kafka-echo-bot](kafka-echo-bot/README.md)                       | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation                                                                                                                |
+| 2 | [kafka-dashboard](kafka-dashboard/README.md)                     | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming                                                                                              |
+| 3 | [kafka-java-code-beginners](kafka-java-code-beginners/README.md) | Producers and Consumers using Java, showcasing various patterns including simple messaging, callbacks, key-based partitioning, graceful shutdown, and cooperative rebalancing |
+| 4 | [kafka-order-logger](kafka-order-logger)                         | Idempotent producer, exactly-once semantics, `ErrorHandlingDeserializer`, offset commit to DB                                                                                 |
+| 5 | [kafka-shopping-cart](kafka-shopping-cart)                       | Compacted topics, event sourcing, state reconstruction, snapshotting                                                                                                          |
+| 6 | [kafka-dlq-visualizer](kafka-dlq-visualizer)                     | `@RetryableTopic`, poison pills, manual DLQ replay, dead letter queue patterns                                                                                                |
 
 Each project is independent. You can run any of them against a shared local Kafka instance on `localhost:9092`.
 
@@ -66,7 +67,7 @@ This workshop is intentionally scoped. Here is exactly what will and won't be co
 
 ## Running the Projects
 
-### Option A — Shared Kafka instance (recommended)
+### Option A — Shared Kafka instance
 
 If you already have Kafka running on `localhost:9092`, skip the per-project Docker Compose and point each app at it via `application.yml`. This is the normal development workflow once your environment is stable.
 
