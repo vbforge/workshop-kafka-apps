@@ -28,7 +28,6 @@ com.vbforge
       └──producer
             ├── ProducerDemo.java                              # Basic producer
             ├── ProducerDemoSynch.java                         # Basic sync-producer (Synchronous send: wait for result)
-            ├── ProducerDemoWithCallback.java                  # Producer with metadata logging 
             ├── ProducerDemoWithCallback.java                  # Producer with metadata logging
             ├── ProducerDemoWithCallbackSwitchPartitions.java  # Demonstrates sticky partitioning
             └── ProducerDemoKeys.java                          # Key-based message routing
@@ -60,7 +59,7 @@ docker ps
 
 ---
 
-## Component Descriptions
+## Components Descriptions
 
 ### Producers
 
@@ -68,9 +67,30 @@ docker ps
 * [run flow description](helper/run-producer-demo-producer-demo-sync.md)
 * The simplest producer example that sends a single "hello world" message.
 
+#### 2. ProducerDemoSync
+* [run flow description](helper/run-producer-demo-producer-demo-sync.md)
+* Synchronous producer that waits for send confirmation.
 
+#### 3. ProducerDemoWithCallback
+* Producer that logs metadata (topic, partition, offset) via callback.
 
+#### 4. ProducerDemoWithCallbackSwitchPartitions
+* Demonstrates sticky partitioning by sending messages in batches.
 
+#### 5. ProducerDemoKeys
+* Demonstrates key-based message routing to partitions.
+
+### Consumers
+
+#### 1. ConsumerDemo
+* [run flow description](helper/run-consumer-demo.md)
+* Basic consumer that continuously polls for messages with graceful shutdown.
+
+#### 2. ConsumerDemoWithShutdown
+* Consumer with enhanced graceful shutdown and wakeup handling.
+
+#### 3. ConsumerDemoCooperative
+* Uses CooperativeStickyAssignor for incremental rebalancing.
 
 ---
 
@@ -81,6 +101,11 @@ docker ps
 3. **Consumer Groups**: Multiple consumers in a group share partition consumption
 4. **Graceful Shutdown**: Proper cleanup prevents data loss and aids rebalancing
 5. **Cooperative Rebalancing**: Minimizes disruption by only reassigning necessary partitions
+
+---
+
+## Check Tests All scenarios:
+[Test all scenarios](helper/test-all-scenarios.md)
 
 ---
 

@@ -71,11 +71,11 @@ This workshop is intentionally scoped. Here is exactly what will and won't be co
 
 If you already have Kafka running on `localhost:9092`, skip the per-project Docker Compose and point each app at it via `application.yml`. This is the normal development workflow once your environment is stable.
 
-### Option B — Per-project Docker Compose
+### Option B — Per-project Docker Compose (mostly used across repository projects)
 
 Each project ships its own `docker-compose.yml` with Kafka in KRaft mode and a Conduktor UI panel.
 
-```bash
+```
 cd kafka-echo-bot
 docker compose up -d
 ./mvnw spring-boot:run
@@ -92,6 +92,12 @@ Conduktor UI is available at `http://localhost:8085` for visual inspection of to
 - Maven 3.9+ (or use the `./mvnw` wrapper)
 - Basic Spring Boot knowledge: controllers, services, `application.yml`
 - No prior Kafka experience required — that is what this workshop is for
+
+---
+
+## Useful Kafka CLI Commands with Docker:
+
+[check useful commands with docker](helper_docs/useful-kafka-cli-commands-with-docker.md)
 
 ---
 
