@@ -72,6 +72,7 @@ docker ps
 * Synchronous producer that waits for send confirmation.
 
 #### 3. ProducerDemoWithCallback
+* [run flow description](helper/run-producer-demo-callback.md)
 * Producer that logs metadata (topic, partition, offset) via callback.
 
 #### 4. ProducerDemoWithCallbackSwitchPartitions
