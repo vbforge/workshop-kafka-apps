@@ -322,4 +322,145 @@ ProducerRecord<String, String> producerRecord =
 
 ---
 
+### Scenario 5: Cooperative Rebalancing (ConsumerDemoCooperative)
+
+**Concept:** Uses Cooperative Sticky Assignor for incremental rebalancing. Only affected partitions move when consumers join or leave.
+
+**Step 1: Run first consumer instance (Terminal 1)**
+```bash
+# In IntelliJ (with Allow multiple instances enabled)
+# Run ConsumerDemoCooperative.main() - Instance 1
+```
+
+**Expected output:**
+```
+🚀 Starting Kafka Consumer with Cooperative Sticky Assignor
+✅ Subscribed to topic: demo_topic_example
+💓 Heartbeat: No messages received, still polling...
+```
+**Assignment:** All 3 partitions `[0, 1, 2]`
+
+**Step 2: Run second consumer instance (Terminal 2)**
+```bash
+# Run another instance - keep first running
+```
+
+**Expected rebalancing output (first consumer logs):**
+```
+⚖️ Rebalancing started (Cooperative - incremental)
+   Previously owned partitions: [0, 1, 2]
+   New assignment: [0, 1]  ← Kept most partitions!
+```
+
+**Second consumer logs:**
+```
+✅ Subscribed to topic: demo_topic_example
+   New assignment: [2]  ← Received only one partition
+```
+
+**Key observation:** First consumer kept [0,1] - only partition 2 moved!
+
+**Step 3: Run third consumer instance (Terminal 3)**
+```bash
+# Run third instance
+```
+
+**Expected distribution:**
+```
+Consumer 1 → [0]  (lost only partition 1)
+Consumer 2 → [1]  (lost partition 2, gained 1)
+Consumer 3 → [2]  (new consumer)
+```
+
+**Step 4: Stop second consumer (Ctrl+C in Terminal 2)**
+Watch incremental rebalancing:
+```
+⚖️ Only partitions from stopped consumer are reassigned
+Consumer 1 → [0, 1]  (gained partition 1)
+Consumer 3 → [2]     (unchanged!)
+```
+
+**Notice:** Consumer 3 kept its partition! No full rebalance.
+
+---
+
+#### What Makes This Different from Eager Rebalancing?
+
+| Event | Eager (Range/RoundRobin) | Cooperative Sticky |
+|-------|--------------------------|---------------------|
+| **2nd consumer joins** | All consumers STOP, all partitions reassigned | Only partition 2 moves |
+| **3rd consumer joins** | All consumers STOP again | Only partitions 1 and 2 move |
+| **Consumer leaves** | All consumers STOP | Only that consumer's partitions move |
+| **Downtime per rebalance** | Several seconds | Milliseconds |
+| **State preservation** | Lost | Preserved |
+
+**Visual representation:**
+```
+Eager Rebalancing (Stop-the-World):
+Timeline: [Consumer 1 Running] [STOP] [REASSIGN ALL] [START Consumers 1,2]
+           ↑───────────────↑      ↑      ↑────────────↑      ↑
+                 Work            Pause      Work resumes
+
+Cooperative Sticky (Incremental):
+Timeline: [Consumer 1 Running] [Continue Work]
+                ↑                       ↑
+           Consumer 2 joins → Only partition 2 moves (Consumer 1 keeps working!)
+```
+
+**Step 5: Verify with consumer group CLI**
+```bash
+docker exec -it kafka-java-broker kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --group my-java-application
+```
+
+Shows which consumer has which partition.
+
+**Step 6: Test with messages**
+```bash
+# Send messages with keys to see routing to specific consumers
+docker exec -it kafka-java-broker kafka-console-producer \
+  --bootstrap-server localhost:9092 \
+  --topic demo_topic_example \
+  --property parse.key=true \
+  --property key.separator=:
+```
+
+**Key Insights:**
+
+| Observation | Explanation |
+|-------------|-------------|
+| First consumer kept [0,1] | Cooperative assignor preserves existing assignments |
+| Second consumer got only [2] | Only unassigned partitions move |
+| No full rebalance | Incremental = minimal disruption |
+| Consumers continue processing | No "stop-the-world" pause |
+
+**Why This Matters:**
+- **Large deployments** (100+ consumers) rebalance in seconds vs minutes
+- **Stateful processing** (Kafka Streams) preserves local state
+- **Rolling restarts** don't pause entire application
+- **Auto-scaling** adds/removes consumers with minimal impact
+
+**Experiment: Compare with eager assignor**
+
+```
+// Change assignment strategy to Range (eager)
+properties.setProperty("partition.assignment.strategy", 
+    "org.apache.kafka.clients.consumer.RangeAssignor");
+```
+
+**Observe difference:** Every consumer rebalance now causes ALL consumers to stop!
+
+---
+
+## Key Learning Points
+
+1. **Cooperative Sticky is default** in modern Kafka clients
+2. **Incremental rebalancing** = only affected partitions move
+3. **Sticky** = keep previous assignments when possible
+4. **No stop-the-world** = consumers continue processing
+5. **Essential for large consumer groups** (100+ consumers)
+
+---
 

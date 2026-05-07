@@ -93,6 +93,7 @@ docker ps
 * Consumer with enhanced graceful shutdown and wakeup handling.
 
 #### 3. ConsumerDemoCooperative
+* [run flow description](helper/run-consumer-demo-cooperative.md)
 * Uses CooperativeStickyAssignor for incremental rebalancing.
 
 ---
