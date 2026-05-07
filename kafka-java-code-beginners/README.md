@@ -78,6 +78,7 @@ docker ps
 * Demonstrates sticky partitioning by sending messages in batches.
 
 #### 5. ProducerDemoKeys
+* [run flow description](helper/run-producer-demo-key.md)
 * Demonstrates key-based message routing to partitions.
 
 ### Consumers
