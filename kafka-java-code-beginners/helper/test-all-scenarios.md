@@ -209,3 +209,117 @@ org.apache.kafka.common.errors.TimeoutException: Failed to send message
 - ✅ Performance monitoring - measure time between send and ack
 
 ---
+
+### Scenario 4: Sticky Partitioning (ProducerDemoWithCallbackSwitchPartitions)
+
+**Concept:** Kafka batches multiple messages to the SAME partition until the batch fills, then "sticks" to a new partition. This improves throughput by reducing metadata requests.
+
+**Step 1: Run ProducerDemoWithCallbackSwitchPartitions**
+```bash
+# In IntelliJ: Run ProducerDemoWithCallbackSwitchPartitions.main()
+# Or via Maven:
+mvn exec:java -Dexec.mainClass="com.vbforge.producer.ProducerDemoWithCallbackSwitchPartitions"
+```
+
+**Step 2: Observe partition switching behavior**
+
+The producer sends 300 messages (10 batches × 30 messages) with `batch.size=400` bytes.
+
+**Expected output:**
+```
+📦 BATCH 1 of 10 starting...
+   📝 Msg #  1 | Partition: 0 | Offset: 30 | Batch: 1
+   📝 Msg #  2 | Partition: 0 | Offset: 31 | Batch: 1
+   ... (all messages 1-30 in partition 0) ...
+   ✅ Batch 1 completed
+
+📦 BATCH 2 of 10 starting...
+   🔄 PARTITION SWITCH: 0 → 1 at message #31
+   📝 Msg # 31 | Partition: 1 | Offset: 30 | Batch: 2
+   ... (all messages 31-60 in partition 1) ...
+   ✅ Batch 2 completed
+
+📦 BATCH 3 of 10 starting...
+   🔄 PARTITION SWITCH: 1 → 2 at message #61
+   ... (all messages 61-90 in partition 2) ...
+```
+
+**Step 3: Understand what's happening**
+
+| Batch | Partition | Why |
+|-------|-----------|-----|
+| Batch 1 | Partition 0 | Sticky partitioner chooses first partition |
+| Batch 2 | Partition 1 | Batch 1 filled buffer → switches to new partition |
+| Batch 3 | Partition 2 | Batch 2 filled buffer → switches again |
+| Batch 4 | Partition 0 | Cycles back after all partitions used |
+
+**Step 4: Verify with console consumer**
+```bash
+docker exec -it kafka-java-broker kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic demo_topic_example \
+  --from-beginning \
+  --property print.partition=true | head -40
+```
+
+**Expected output shows:**
+```
+Partition:0    Message #1 (batch:1, item:1)
+Partition:0    Message #2 (batch:1, item:2)
+...
+Partition:0    Message #30 (batch:1, item:30)
+Partition:1    Message #31 (batch:2, item:1)  ← Switch!
+Partition:1    Message #32 (batch:2, item:2)
+```
+
+**Step 5: Check distribution across partitions**
+```bash
+docker exec -it kafka-java-broker kafka-run-class \
+  --class kafka.tools.GetOffsetShell \
+  --bootstrap-server localhost:9092 \
+  --topic demo_topic_example
+```
+
+**Expected result (roughly even distribution):**
+```
+demo_topic_example:0:100   (about 100 messages)
+demo_topic_example:1:100   (about 100 messages)
+demo_topic_example:2:100   (about 100 messages)
+```
+
+**Key Insights:**
+
+| Observation | Explanation |
+|-------------|-------------|
+| **Batch 1 all in partition 0** | Kafka "sticks" to one partition for efficiency |
+| **Partition switches at batch boundaries** | When batch fills, next batch goes to different partition |
+| **Offsets reset per partition** | Each partition has its own offset sequence (0,1,2...) |
+| **Even distribution over time** | Over many batches, messages spread across partitions |
+
+**Why Sticky Partitioning is Better:**
+
+| Aspect | Round-Robin (Old) | Sticky Partitioning (Kafka 3.0+) |
+|--------|-------------------|-----------------------------------|
+| **Network overhead** | High (per-message metadata) | Low (per-batch metadata) |
+| **Batch compression** | Poor (small batches) | Excellent (large batches) |
+| **Throughput** | Lower | 2-3x higher |
+| **Default behavior** | No | Yes |
+
+**Experiment #1: Increase batch size**
+```
+// Change batch.size to default 16KB
+properties.setProperty("batch.size", "16384");
+```
+**Result:** Fewer partition switches because each batch can hold more messages.
+
+**Experiment #2: Add keys to override sticky partitioning**
+```java
+// Keys force specific partitions
+ProducerRecord<String, String> producerRecord = 
+    new ProducerRecord<>("demo_topic_example", "key_" + (i % 3), message);
+```
+**Result:** Messages with same key go to same partition, overriding sticky behavior.
+
+---
+
+

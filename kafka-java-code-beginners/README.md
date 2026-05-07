@@ -76,6 +76,7 @@ docker ps
 * Producer that logs metadata (topic, partition, offset) via callback.
 
 #### 4. ProducerDemoWithCallbackSwitchPartitions
+* [run flow description](helper/run-producer-demo-sticky-partitions.md)
 * Demonstrates sticky partitioning by sending messages in batches.
 
 #### 5. ProducerDemoKeys
