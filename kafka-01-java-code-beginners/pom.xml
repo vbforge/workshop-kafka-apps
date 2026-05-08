@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.vbforge</groupId>
-    <artifactId>kafka-java-code-beginners</artifactId>
+    <artifactId>kafka-01-java-code-beginners</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>kafka-java-code-beginners</name>
+    <name>kafka-01-java-code-beginners</name>
     <description>Java code for Kafka Producer/Consumer scenarios</description>
 
     <properties>

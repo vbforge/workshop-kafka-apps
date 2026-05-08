@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>com.vbforge</groupId>
-    <artifactId>kafka-dashboard</artifactId>
+    <artifactId>kafka-04-dashboard</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>kafka-dashboard</name>
+    <name>kafka-04-dashboard</name>
     <description>Real-time Kafka Dashboard: consumer groups, partition awareness, in-memory aggregation</description>
 
     <properties>

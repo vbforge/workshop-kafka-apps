@@ -11,10 +11,10 @@
     </parent>
 
     <groupId>com.vbforge</groupId>
-    <artifactId>kafka-echo-bot</artifactId>
+    <artifactId>kafka-03-echo-bot</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>kafka-echo-bot</name>
-    <description>kafka-echo-bot</description>
+    <name>kafka-03-echo-bot</name>
+    <description>KafkaTemplate, @KafkaListener, auto-commit, topic creation</description>
 
     <properties>
         <java.version>17</java.version>
