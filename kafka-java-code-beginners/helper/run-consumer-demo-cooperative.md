@@ -293,21 +293,7 @@ key3:Third message
 
 ## Comparison: Eager vs Cooperative
 
-```mermaid
-graph LR
-    subgraph "Eager Rebalancing"
-    A1[Consumer 1] -->|Stop| B1[Revoke All]
-    A2[Consumer 2] -->|Stop| B1
-    B1 -->|Assign| C1[Consumer 1]
-    B1 -->|Assign| C2[Consumer 2]
-    end
-    
-    subgraph "Cooperative Sticky"
-    D1[Consumer 1] -->|Continue| E1[Keep Partitions]
-    D2[Consumer 2] -->|Join| E2[Get Some Partitions]
-    D3[Consumer 3] -->|Join| E3[Get Remaining]
-    end
-```
+![](image-1-comparison-eager-vs-cooperative.png)
 
 ---
 

@@ -1,5 +1,17 @@
 ## Test All Scenarios
 
+### Table of contents
+
+* [Scenario 1: Basic Producer-Consumer Flow](#scenario-1-basic-producer-consumer-flow)
+* [Scenario 2: Key-Based Partitioning (ProducerDemoKeys)](#scenario-2-key-based-partitioning-producerdemokeys)
+* [Scenario 3: Producer with Callbacks (ProducerDemoWithCallback)](#scenario-3-producer-with-callbacks-producerdemowithcallback)
+* [Scenario 4: Sticky Partitioning (ProducerDemoWithCallbackSwitchPartitions)](#scenario-4-sticky-partitioning-producerdemowithcallbackswitchpartitions)
+* [Scenario 5: Cooperative Rebalancing (ConsumerDemoCooperative)](#scenario-5-cooperative-rebalancing-consumerdemocooperative)
+* [Scenario 6: Graceful Shutdown (ConsumerDemoWithShutdown)](#scenario-6-graceful-shutdown-consumerdemowithshutdown)
+* [Quick Reference: All Test Commands](#quick-reference-all-test-commands)
+* [Partition Distribution Formula](#partition-distribution-formula)
+
+
 ### Scenario 1: Basic Producer-Consumer Flow
 
 **Step 1: Create topic**
@@ -452,9 +464,7 @@ properties.setProperty("partition.assignment.strategy",
 
 **Observe difference:** Every consumer rebalance now causes ALL consumers to stop!
 
----
-
-## Key Learning Points
+#### Key Learning Points
 
 1. **Cooperative Sticky is default** in modern Kafka clients
 2. **Incremental rebalancing** = only affected partitions move
@@ -464,3 +474,159 @@ properties.setProperty("partition.assignment.strategy",
 
 ---
 
+### Scenario 6: Graceful Shutdown (ConsumerDemoWithShutdown)
+
+**Concept:** Properly shuts down consumer with offset commit and clean group departure.
+
+**Step 1: Start consumer**
+```bash
+# In IntelliJ: Run ConsumerDemoWithShutdown.main()
+# Or via Maven:
+mvn exec:java -Dexec.mainClass="com.vbforge.consumer.ConsumerDemoWithShutdown"
+```
+
+**Expected output:**
+```
+🚀 Starting Kafka Consumer with Graceful Shutdown
+✅ Subscribed to topic: demo_topic_example
+💡 Press Ctrl+C to gracefully shut down
+```
+
+**Step 2: Send test messages**
+```bash
+# In another terminal
+docker exec -it kafka-java-broker kafka-console-producer \
+  --bootstrap-server localhost:9092 \
+  --topic demo_topic_example
+```
+
+Type a few messages and watch consumer receive them.
+
+**Step 3: Graceful shutdown (Press Ctrl+C in consumer terminal)**
+
+**Expected shutdown output:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ SHUTDOWN SIGNAL DETECTED (Ctrl+C)
+   Calling consumer.wakeup() to interrupt poll()...
+   Waiting for main thread to finish processing...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👋 WakeupException caught - initiating graceful shutdown
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔒 Closing consumer...
+   - Committing final offsets
+   - Leaving consumer group
+   - Closing network connections
+✅ Consumer closed successfully
+🏁 Consumer finished - graceful shutdown complete!
+```
+
+**Step 4: Verify offsets were committed**
+
+Check consumer group:
+```bash
+docker exec -it kafka-java-broker kafka-consumer-groups \
+  --bootstrap-server localhost:9092 \
+  --describe \
+  --group my-java-application
+```
+
+**Expected output shows CURRENT-OFFSET = LOG-END-OFFSET (no lag)**
+
+**Step 5: Test multiple consumer instances with shutdown**
+
+**Terminal 1:**
+```bash
+mvn exec:java -Dexec.mainClass="com.vbforge.consumer.ConsumerDemoWithShutdown"
+```
+
+**Terminal 2:**
+```bash
+# Run second instance
+```
+
+**Observe partition assignment:**
+- First consumer: gets [0, 1, 2] initially
+- Second consumer joins: rebalancing, first consumer keeps [0, 1], second gets [2]
+
+**Step 6: Shutdown second consumer (Ctrl+C in Terminal 2)**
+
+**Observe in Terminal 1:**
+```
+⚠️ Rebalancing triggered (consumer left)
+   Previously owned partitions: [0, 1]
+   New assignment: [0, 1, 2]  ← Gained partition 2
+   Consumer continues processing without interruption!
+```
+
+**Key observation:** The remaining consumer KEPT its partitions [0,1] and only GAINED partition 2. No full rebalance!
+
+
+#### What Happens During Graceful Shutdown?
+
+| Phase | Action | Why |
+|-------|--------|-----|
+| 1. Signal | Ctrl+C → shutdown hook triggered | Catches termination signal |
+| 2. Interrupt | `consumer.wakeup()` called | Breaks out of poll() |
+| 3. Exception | `WakeupException` thrown | Expected, not an error |
+| 4. Cleanup | `consumer.close()` called | Commits offsets, leaves group |
+| 5. Rebalance | Consumer group rebalances | Partitions reassigned |
+
+**Without Graceful Shutdown (Forceful Kill):**
+```
+Process killed → No offset commit → Messages will be re-processed on restart
+Consumer group → Stale member (waiting for timeout → slow rebalance)
+```
+
+**With Graceful Shutdown:**
+```
+Process ends → Offsets committed → No duplicate processing
+Clean leave → Immediate rebalance → Fast partition reassignment
+```
+
+#### Testing Scenarios Summary
+
+| Test | Command | Expected |
+|------|---------|----------|
+| Single consumer | Run ConsumerDemoWithShutdown | Processes all messages |
+| Graceful shutdown | Press Ctrl+C | Shows shutdown sequence |
+| Check offsets | Describe consumer group | All offsets committed |
+| Two consumers | Run 2 instances | Partitions split |
+| Shutdown one | Ctrl+C on one | Remaining gets all partitions |
+| No duplicate processing | Restart consumer | Doesn't reprocess old messages |
+
+---
+
+## Quick Reference: All Test Commands
+
+| Scenario | Command to Run |
+|----------|----------------|
+| Basic Producer | `ProducerDemo.main()` |
+| Sync Producer | `ProducerDemoSync.main()` |
+| Key-Based Producer | `ProducerDemoKeys.main()` |
+| Producer with Callback | `ProducerDemoWithCallback.main()` |
+| Sticky Partitioner | `ProducerDemoWithCallbackSwitchPartitions.main()` |
+| Simple Consumer | `ConsumerDemo.main()` |
+| Consumer with Shutdown | `ConsumerDemoWithShutdown.main()` |
+| Cooperative Consumer | `ConsumerDemoCooperative.main()` |
+| Console Consumer (Docker) | `docker exec -it kafka-java-broker kafka-console-consumer --bootstrap-server localhost:9092 --topic demo_topic_example --from-beginning --property print.key=true --property print.partition=true` |
+| Console Producer (Docker) | `docker exec -it kafka-java-broker kafka-console-producer --bootstrap-server localhost:9092 --topic demo_topic_example` |
+
+---
+
+## Partition Distribution Formula
+
+```
+partition = Math.abs(Utils.murmur2(key.getBytes())) % numPartitions
+
+Example with 3 partitions:
+- id_1: hash % 3 = 0 → Partition 0
+- id_2: hash % 3 = 1 → Partition 1  
+- id_3: hash % 3 = 2 → Partition 2
+- id_4: hash % 3 = 0 → Partition 0 (same as id_1!)
+- id_5: hash % 3 = 1 → Partition 1 (same as id_2!)
+```
+
+**Note:** Different keys can map to the same partition! That's why `id_1` and `id_4` both go to partition 0.
+
+---
