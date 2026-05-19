@@ -41,11 +41,11 @@ public class MyConsumer2 {
  
     private void run() {
  
-        logger.info("=== Quick Demo Consumer2 ===");
+        logger.info("=== Quick Demo App Consumer2 ===");
         logger.info("Group ID: {} (different from MyConsumer → broadcast)", CONSUMER_GROUP_DEMO_2);
         Utility.verifyConfiguration();
  
-        consumer = new KafkaConsumer<>(KafkaConfig.createConsumerConfig(CONSUMER_GROUP_DEMO_2));
+        consumer = new KafkaConsumer<>(KafkaConfig.createConsumerConfig(CONSUMER_GROUP_DEMO_2)); //or could be CONSUMER_GROUP_DEMO to test load-balance
  
         registerShutdownHook();
  
@@ -59,14 +59,14 @@ public class MyConsumer2 {
                         consumer.poll(Duration.ofMillis(DEFAULT_POLL_TIMEOUT_MS));
  
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    logger.info("==================================");
                     logger.info("[Consumer2] Received message:");
                     logger.info("  Key:       {}", record.key());
                     logger.info("  Value:     {}", record.value());
                     logger.info("  Partition: {}", record.partition());
                     logger.info("  Offset:    {}", record.offset());
                     logger.info("  Timestamp: {}", record.timestamp());
-                    logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    logger.info("==================================");
                 }
             }
  

@@ -33,7 +33,8 @@ public class MultiMessageProducer {
         Utility.verifyConfiguration();
  
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(KafkaConfig.createProducerConfig())) {
- 
+
+            //10 messages
             for (int i = 1; i <= DEFAULT_MESSAGE_COUNT; i++) {
                 String message = "Message #" + i + " from MultiMessageProducer";
  

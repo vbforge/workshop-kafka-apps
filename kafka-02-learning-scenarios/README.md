@@ -60,7 +60,11 @@ NOTES:
 
 
 2) **scenario_02_demo_app:**
-   - descriptions not provided yet...
+   - explore 3 types of Producer: one message only, some messages with `null` key (round-robin) and some messages with keys;
+   - MyConsumer and MyConsumer2 for testing broadcast behavior (different group IDs → both consumers receive all messages); 
+   - Load balance (messages shared between consumers) when consumer group is same for both;
+   - demonstrated how Kafka persists messages across consumer restarts;
+   - [how to run this scenario](src/main/java/com/vbforge/scenario_02_demo_app/how_to_run_scenario_02_demo_app.md)
 
 
 3) **scenario_03_load_balancing:**

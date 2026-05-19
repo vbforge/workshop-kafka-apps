@@ -104,20 +104,22 @@ KAFKA_BOOTSTRAP_SERVERS=myhost:9092 mvn exec:java -Dexec.mainClass="com.vbforge.
 
 ---
 
-## Useful Kafka CLI commands (inside Docker)
+## Useful Kafka CLI commands (inside Docker) for my OS-system
 
 ```bash
+# each call need to start with 'winpty' prefix for execution inside Docker
+
 # List topics
-docker exec -it kafka-learning-broker kafka-topics --list --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-topics --list --bootstrap-server localhost:19092
 
 # Describe topic
-docker exec -it kafka-learning-broker kafka-topics --describe --topic simple-topic --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-topics --describe --topic simple-topic --bootstrap-server localhost:19092
 
 # Read all messages from beginning
-docker exec -it kafka-learning-broker kafka-console-consumer --topic simple-topic --bootstrap-server localhost:19092 --from-beginning
+winpty docker exec -it kafka-learning-broker kafka-console-consumer --topic simple-topic --bootstrap-server localhost:19092 --from-beginning
 
 # Check consumer group status
-docker exec -it kafka-learning-broker kafka-consumer-groups --bootstrap-server localhost:19092 --group consumer-group-simple --describe
+winpty docker exec -it kafka-learning-broker kafka-consumer-groups --bootstrap-server localhost:19092 --group consumer-group-simple --describe
 ```
 
 ---

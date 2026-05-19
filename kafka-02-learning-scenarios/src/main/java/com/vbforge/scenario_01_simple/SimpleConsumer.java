@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * SHUTDOWN HOOK PATTERN EXPLAINED:
  *  - Ctrl+C sends SIGINT → JVM triggers all registered shutdown hooks
- *  - The hook calls consumer.wakeup() — thread-safe, interrupts poll() immediately
+ *  - The hook calls consumer.wakeup() - thread-safe, interrupts poll() immediately
  *  - poll() throws WakeupException → caught in main loop → clean exit
  *  - This is the ONLY correct way; setting a boolean flag alone doesn't interrupt
  *    a blocking poll() call that may be waiting up to DEFAULT_POLL_TIMEOUT_MS
@@ -93,7 +93,7 @@ public class SimpleConsumer {
         } catch (WakeupException e) {
             // Expected on shutdown — not an error
             // wakeup() was called by the shutdown hook; this is the intended exit path
-            logger.info("WakeupException received — consumer is shutting down");
+            logger.info("WakeupException received - consumer is shutting down");
 
         } catch (Exception e) {
             logger.error("Unexpected error: {}", e.getMessage(), e);
@@ -182,12 +182,12 @@ public class SimpleConsumer {
         long processed = totalMessagesReceived.get();
         double throughput = runtime > 0 ? processed / (runtime / 1000.0) : 0;
 
-        logger.info("═══════════════════════════════════════════");
+        logger.info("===========================================");
         logger.info("FINAL STATISTICS:");
         logger.info("   Messages processed: {}", processed);
         logger.info("   Total runtime:      {} ms", runtime);
         logger.info("   Avg throughput:     {} msgs/sec", String.format("%.2f", throughput));
-        logger.info("═══════════════════════════════════════════");
+        logger.info("===========================================");
         logger.info("SimpleConsumer finished!");
     }
 

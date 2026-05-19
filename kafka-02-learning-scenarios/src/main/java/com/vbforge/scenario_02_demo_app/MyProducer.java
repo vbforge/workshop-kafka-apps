@@ -30,14 +30,14 @@ public class MyProducer {
  
     public static void main(String[] args) {
  
-        logger.info("=== Quick Demo Producer ===");
+        logger.info("=== Quick Demo App Producer ===");
         Utility.verifyConfiguration();
  
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(KafkaConfig.createProducerConfig())) {
  
             // key=null → Kafka assigns partition via round-robin
             ProducerRecord<String, String> record =
-                    new ProducerRecord<>(TOPIC_DEMO, null, "Hello from Quick Demo!");
+                    new ProducerRecord<>(TOPIC_DEMO, null, "Hello from Quick Demo App!");
  
             logger.info("Sending message to topic: {}", TOPIC_DEMO);
  
@@ -54,5 +54,6 @@ public class MyProducer {
         } catch (Exception e) {
             logger.error("Failed to send message: {}", e.getMessage(), e);
         }
+
     }
 }

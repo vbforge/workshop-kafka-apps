@@ -23,7 +23,7 @@ import static com.vbforge.config.Constants.*;
  *  - Reading message metadata (partition, offset, key, timestamp)
  *
  * Uses consumer-group-topic-demo.
- * Run alongside MyConsumer2 to see broadcast behaviour
+ * Run alongside MyConsumer2 to see broadcast behavior
  * (different group IDs → both consumers receive all messages).
  *
  * STOP: Press Ctrl+C in the terminal. Do NOT use the IDE Stop button —
@@ -41,7 +41,7 @@ public class MyConsumer {
  
     private void run() {
  
-        logger.info("=== Quick Demo Consumer ===");
+        logger.info("=== Quick Demo App Consumer ===");
         Utility.verifyConfiguration();
  
         consumer = new KafkaConsumer<>(KafkaConfig.createConsumerConfig(CONSUMER_GROUP_DEMO));
@@ -58,19 +58,19 @@ public class MyConsumer {
                         consumer.poll(Duration.ofMillis(DEFAULT_POLL_TIMEOUT_MS));
  
                 for (ConsumerRecord<String, String> record : records) {
-                    logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    logger.info("==================================");
                     logger.info("Received message:");
                     logger.info("  Key:       {}", record.key());
                     logger.info("  Value:     {}", record.value());
                     logger.info("  Partition: {}", record.partition());
                     logger.info("  Offset:    {}", record.offset());
                     logger.info("  Timestamp: {}", record.timestamp());
-                    logger.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    logger.info("==================================");
                 }
             }
  
         } catch (WakeupException e) {
-            logger.info("WakeupException — shutting down");
+            logger.info("WakeupException - shutting down");
         } finally {
             consumer.close(); // commits pending offsets, releases partition assignment
             logger.info("Consumer closed.");
@@ -84,7 +84,7 @@ public class MyConsumer {
      */
     private void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown signal received — calling consumer.wakeup()");
+            logger.info("Shutdown signal received - calling consumer.wakeup()");
             consumer.wakeup();
         }, "consumer-shutdown-hook"));
     }

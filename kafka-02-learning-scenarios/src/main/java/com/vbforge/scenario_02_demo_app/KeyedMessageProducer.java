@@ -36,7 +36,7 @@ public class KeyedMessageProducer {
  
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(KafkaConfig.createProducerConfig())) {
  
-            String[] keys = {"user-A", "user-B", "user-A", "user-C", "user-B", "user-A"};
+            String[] keys = {"user-A", "user-B", "user-D", "user-A", "user-C", "user-F", "user-D", "user-B", "user-A", "user-T"};
  
             for (int i = 0; i < keys.length; i++) {
                 String key   = keys[i];

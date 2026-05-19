@@ -5,10 +5,7 @@
 - Multi-message producer → watch round-robin partition distribution
 - Keyed producer → same key always lands on the same partition
 - Basic consumer with graceful shutdown (ShutdownHook + `wakeup()`)
-- Broadcast vs load-balance behaviour with two consumer groups
-
-This is the "see it work first" scenario before scenario_02_simple
-introduces async callbacks and metrics.
+- Broadcast vs load-balance behavior with two consumer groups
 
 ---
 
@@ -21,27 +18,31 @@ introduces async callbacks and metrics.
   docker-compose ps   # confirm kafka-learning-broker is healthy
   ```
 
+- To check which topics are already exist:
+  ```bash
+  winpty docker exec -it kafka-learning-broker kafka-topics --bootstrap-server localhost:9092 --list
+  ```
+- expected output:
+  ```
+  __consumer_offsets
+  topic-simple
+  topic-test-connectivity-kafka
+  ```
+
 ---
 
 ## Topic Setup
 
-`topic-demo` needs **3 partitions** so the partition distribution experiments
-are meaningful. With `KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"` in docker-compose,
-auto-create gives you only 1 partition. Create it manually once:
+`topic-demo` needs **3 partitions** so the partition distribution experiments are meaningful. With `KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"` in docker-compose,
+auto-create gives us only 1 partition. Create it manually once:
 
 ```bash
-docker exec -it kafka-learning-broker \
-  kafka-topics --create \
-  --topic topic-demo \
-  --partitions 3 \
-  --replication-factor 1 \
-  --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-topics --create --topic topic-demo --partitions 3 --replication-factor 1 --bootstrap-server localhost:19092
 ```
 
 Verify:
 ```bash
-docker exec -it kafka-learning-broker \
-  kafka-topics --describe --topic topic-demo --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-topics --describe --topic topic-demo --bootstrap-server localhost:19092
 ```
 
 ---
@@ -132,8 +133,7 @@ With 3 partitions and 2 consumers, the split will be approximately 2:1.
 Start `MyConsumer` in Terminal 1, then in Terminal 2:
 
 ```bash
-docker exec -it kafka-learning-broker \
-  kafka-console-producer --topic topic-demo --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-console-producer --topic topic-demo --bootstrap-server localhost:19092
 ```
 
 Type any text and press Enter. Watch Terminal 1 receive it.
@@ -145,7 +145,7 @@ Type any text and press Enter. Watch Terminal 1 receive it.
 Start the CLI consumer first:
 
 ```bash
-docker exec -it kafka-learning-broker \
+winpty docker exec -it kafka-learning-broker \
   kafka-console-consumer \
   --topic topic-demo \
   --from-beginning \
@@ -173,22 +173,16 @@ This demonstrates Kafka's persistent storage model (not a transient message queu
 
 ```bash
 # List all topics
-docker exec -it kafka-learning-broker \
-  kafka-topics --list --bootstrap-server localhost:19092
+docker exec -it kafka-learning-broker kafka-topics --list --bootstrap-server localhost:19092
 
 # Describe topic-demo (partitions, leader, replicas)
-docker exec -it kafka-learning-broker \
-  kafka-topics --describe --topic topic-demo --bootstrap-server localhost:19092
+docker exec -it kafka-learning-broker kafka-topics --describe --topic topic-demo --bootstrap-server localhost:19092
 
 # Read all messages from the beginning
-docker exec -it kafka-learning-broker \
-  kafka-console-consumer --topic topic-demo \
-  --from-beginning --bootstrap-server localhost:19092
+docker exec -it kafka-learning-broker kafka-console-consumer --topic topic-demo --from-beginning --bootstrap-server localhost:19092
 
 # Check consumer group offsets and lag
-docker exec -it kafka-learning-broker \
-  kafka-consumer-groups --bootstrap-server localhost:19092 \
-  --group consumer-group-topic-demo --describe
+docker exec -it kafka-learning-broker kafka-consumer-groups --bootstrap-server localhost:19092 --group consumer-group-topic-demo --describe
 ```
 
 ---
@@ -197,8 +191,7 @@ docker exec -it kafka-learning-broker \
 
 ```bash
 # Delete topic (reset for fresh experiment)
-docker exec -it kafka-learning-broker \
-  kafka-topics --delete --topic topic-demo --bootstrap-server localhost:19092
+winpty docker exec -it kafka-learning-broker kafka-topics --delete --topic topic-demo --bootstrap-server localhost:19092
 
 # Stop Kafka, keep data
 docker-compose down
