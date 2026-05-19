@@ -68,7 +68,11 @@ NOTES:
 
 
 3) **scenario_03_load_balancing:**
-   - descriptions not provided yet...
+    - Multiple partitions for parallel processing
+    - Consumer group with multiple consumers
+    - Automatic partition assignment
+    - Load distribution across consumers
+    - [how to run this scenario](src/main/java/com/vbforge/scenario_03_load_balancing/how_to_run_scenario_03_load_balancing.md)
 
    
 4) **scenario_04_topic_keyed:**
