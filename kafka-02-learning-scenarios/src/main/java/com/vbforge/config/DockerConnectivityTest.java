@@ -18,7 +18,7 @@ public class DockerConnectivityTest {
         
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(KafkaConfig.createProducerConfig())) {
             
-            producer.send(new ProducerRecord<>(TOPIC_TEST_CONNECTIVITY_KAFKA, TEST_CONNECTIVITY_KEY, TEST_CONNECTIVITY_VALUE));
+            producer.send(new ProducerRecord<>(TOPIC_TEST_CONNECTIVITY, TEST_CONNECTIVITY_KEY, TEST_CONNECTIVITY_VALUE));
             producer.flush();
             log.info("Successfully connected to Docker Kafka!");
 

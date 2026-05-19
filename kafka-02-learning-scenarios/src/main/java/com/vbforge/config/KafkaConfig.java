@@ -9,138 +9,141 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-import static com.vbforge.config.Constants.*;
-
+import static com.vbforge.config.Constants.BOOTSTRAP_SERVERS;
 
 /**
- * Configuration class for Kafka Producers & Consumers
- * Central configurations across all scenarios
- * Works with BOTH local Kafka and Docker Kafka
+ * Central Kafka configuration factory for all scenarios.
+ *
+ * Provides:
+ *  - createProducerConfig()             — idempotent, async-ready
+ *  - createConsumerConfig(groupId)      — auto-commit, earliest offset
+ *  - createManualCommitConsumerConfig() — for scenario_05 manual offsets
+ *  - createBatchConsumerConfig()        — for scenario_06 high-throughput
  */
 public class KafkaConfig {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConfig.class);
 
 
-    // ==========================================================================================
-    // PRODUCER CONFIGS
-    // ==========================================================================================
+    // =========================================================================
+    // PRODUCER
+    // =========================================================================
+
     /**
-     * Creates standard producer configuration
-     * @return Properties configured for Kafka producer
+     * Standard producer configuration used across all scenarios.
+     *
+     * Key decisions:
+     *  - enable.idempotence=true: guarantees exactly-once delivery to a single
+     *    partition across retries. Kafka automatically enforces acks=all and
+     *    retries=MAX_VALUE when this is set — do NOT set those manually alongside it.
+     *  - linger.ms=10: producer waits up to 10ms to batch messages together before
+     *    sending. Only effective when messages arrive faster than the linger window.
+     *    In scenario_02 with 500ms between sends, each message ships individually —
+     *    linger has no effect there but is correct config for higher-throughput scenarios.
+     *  - batch.size=16384: max bytes per batch (16KB). Works together with linger.ms.
      */
     public static Properties createProducerConfig() {
         Properties props = new Properties();
 
-        // Kafka broker address (Docker exposed on localhost:9092)
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
 
-        // Serializers convert Java Objects to bytes for transmission
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
-        // Producer acknowledgement configuration
-        // 'all' means wait for all replicas to acknowledge (safest but slowest)
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        // Idempotent producer: prevents duplicate messages on retry.
+        // Implicitly sets acks=all and retries=Integer.MAX_VALUE — don't override them.
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
 
-        // Number of retries if sending fails
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
-
-        // Batch size in bytes (improves throughput)
+        // Batching: accumulate up to 16KB or wait up to 10ms before sending.
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
-
-        // Wait up to 10ms to batch more messages together
-        props.put(ProducerConfig.LINGER_MS_CONFIG, 10);
-
-        // Compression (optional - good for performance)
-        // props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        props.put(ProducerConfig.LINGER_MS_CONFIG,  10);
 
         return props;
     }
 
-    /**
-     * Creates producer config with custom settings for keyed messages
-     * Ensures partitioner respects message keys
-     */
-    public static Properties createKeyedProducerConfig() {
-        
-        // Use default partitioner (respects keys)
-        // No additional config needed - default behavior routes same keys to same partition
-        return createProducerConfig();
-    }
 
+    // =========================================================================
+    // CONSUMER — auto-commit (scenarios 01–04)
+    // =========================================================================
 
-    // ==========================================================================================
-    // CONSUMER CONFIGS
-    // ==========================================================================================
     /**
-     * Creates standard consumer configuration with auto-commit enabled
-     * @param groupId The consumer group ID
-     * @return Properties configured for Kafka consumer
+     * Standard consumer configuration with auto-commit enabled.
+     * Suitable for scenarios where "at-least-once" processing is acceptable
+     * and you don't need precise control over when offsets are committed.
+     *
+     * @param groupId Consumer group ID — determines workload sharing behaviour.
+     *                Consumers with the same groupId share partitions (load balance).
+     *                Consumers with different groupIds each get all messages (broadcast).
      */
     public static Properties createConsumerConfig(String groupId) {
-
-        log.info("Creating consumer config with groupId: {}", groupId);
+        log.info("Creating consumer config — groupId: {}", groupId);
 
         Properties props = new Properties();
 
-        // Kafka broker address
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG,          groupId);
 
-        // Consumer group ID - consumers in same group share workload
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-
-        // Deserializers convert bytes back to Java Objects
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,   StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
 
-        // What to do if there's no initial offset or offset is out of range
-        // 'earliest' - start from beginning, 'latest' - start from the end
+        // earliest: start from the beginning if no committed offset exists for this group.
+        // latest:   start from the end (miss any messages sent before consumer started).
+        // Use 'earliest' during development so you never miss messages on restart.
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-        // Auto-commit offset every 1 second
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        // Auto-commit: Kafka commits the offset every 1 second in the background.
+        // Simple but imprecise — if your app crashes between poll() and commit,
+        // messages may be reprocessed. See createManualCommitConsumerConfig() for control.
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,      "true");
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
 
-        // Maximum records returned in a single poll
+        // Max records returned per poll() call.
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
 
-        // Heartbeat interval (important for consumer groups)
+        // Heartbeat & session: consumer sends heartbeat every 3s.
+        // If broker sees no heartbeat for 45s, it considers consumer dead and rebalances.
         props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, "3000");
-        
-        // Session timeout
-        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "45000");
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG,    "45000");
 
         return props;
     }
 
+
+    // =========================================================================
+    // CONSUMER — manual commit (scenario_05)
+    // =========================================================================
+
     /**
-     * Creates consumer config with manual offset commit disabled.
-     * Use this when want to control exactly when offsets are committed.
-     * @param groupId The consumer group ID
-     * @return Properties configured for manual commit
+     * Consumer config with auto-commit disabled.
+     * Use when you need to control exactly when offsets are committed —
+     * typically after you've confirmed the message was fully processed.
+     *
+     * Pair with consumer.commitSync() or consumer.commitAsync() in your code.
+     *
+     * @param groupId Consumer group ID
      */
     public static Properties createManualCommitConsumerConfig(String groupId) {
         Properties props = createConsumerConfig(groupId);
-
-        // Disable auto-commit - we'll commit manually
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-
         return props;
     }
 
+
+    // =========================================================================
+    // CONSUMER — batch processing (scenario_06)
+    // =========================================================================
+
     /**
-     * Creates consumer config with batch processing optimizations
-     * @param groupId The consumer group ID
-     * @param maxPollRecords Maximum records per poll
-     * @return Properties configured for batch processing
+     * Consumer config optimized for batch processing with manual commit.
+     * Increases max records per poll for higher throughput scenarios.
+     *
+     * @param groupId        Consumer group ID
+     * @param maxPollRecords How many records to fetch per poll() call
      */
     public static Properties createBatchConsumerConfig(String groupId, int maxPollRecords) {
         Properties props = createManualCommitConsumerConfig(groupId);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, String.valueOf(maxPollRecords));
         return props;
     }
-
-
 
 }
