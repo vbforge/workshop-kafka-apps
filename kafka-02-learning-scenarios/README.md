@@ -52,39 +52,43 @@ NOTES:
 
 ## What we explore (6 scenarios):
 
-1) **scenario_01_simple:** 
-   - explore simple `Producer` & `Consumer`;
-   - `Consumer` could be gracefully shutdown `Ctrl + C` since it run infinitely (shutdown-hook-pattern provided);
-   - callbacks for sent messages also provided;
-   - [how to run this scenario](src/main/java/com/vbforge/scenario_01_simple/how_to_run_scenario_01_simple.md)
+1) **scenario_01_simple:**
+    - Async `Producer` with callbacks — success path, failure path, send metrics;
+    - `Consumer` runs infinitely, graceful shutdown via `Ctrl+C` (ShutdownHook + `consumer.wakeup()` pattern);
+    - `WakeupException` as the correct interrupt mechanism for `poll()`;
+    - [how to run](src/main/java/com/vbforge/scenario_01_simple/how_to_run_scenario_01_simple.md)
 
 
 2) **scenario_02_demo_app:**
-   - explore 3 types of Producer: one message only, some messages with `null` key (round-robin) and some messages with keys;
-   - MyConsumer and MyConsumer2 for testing broadcast behavior (different group IDs → both consumers receive all messages); 
-   - Load balance (messages shared between consumers) when consumer group is same for both;
-   - demonstrated how Kafka persists messages across consumer restarts;
-   - [how to run this scenario](src/main/java/com/vbforge/scenario_02_demo_app/how_to_run_scenario_02_demo_app.md)
+    - Three producer variants: single message (`MyProducer`), multiple with `null` key — round-robin (`MultiMessageProducer`), messages with explicit keys (`KeyedMessageProducer`);
+    - Broadcast behaviour — `MyConsumer` and `MyConsumer2` use different group IDs → both receive all messages;
+    - Load-balance behaviour — switching both consumers to the same group ID → each message delivered to one consumer only;
+    - Kafka persistence — messages survive consumer downtime, replayed on restart;
+    - [how to run](src/main/java/com/vbforge/scenario_02_demo_app/how_to_run_scenario_02_demo_app.md)
 
 
 3) **scenario_03_load_balancing:**
-    - Multiple partitions for parallel processing
-    - Consumer group with multiple consumers
-    - Automatic partition assignment
-    - Load distribution across consumers
-    - [how to run this scenario](src/main/java/com/vbforge/scenario_03_load_balancing/how_to_run_scenario_03_load_balancing.md)
+    - Single `LoadBalancingConsumer` class run N times — no copy-paste consumers;
+    - Consumer group: Kafka auto-assigns partitions across all running instances;
+    - Rebalancing observed live: stop a consumer → others absorb its partitions;
+    - Ceiling rule: consumers > partitions → excess consumers sit idle until a slot opens;
+    - [how to run](src/main/java/com/vbforge/scenario_03_load_balancing/how_to_run_scenario_03_load_balancing.md)
 
-   
+
 4) **scenario_04_topic_keyed:**
-   - descriptions not provided yet...
+    - `KeyedProducer` — user ID as message key; same key always routes to the same partition via `hash(key) % numPartitions`;
+    - `KeyedConsumer` tracks per-key event counts — each consumer instance owns a fixed subset of keys, never overlap;
+    - `OrderProofProducer` — sends a fixed step-by-step workflow per user (Login→Browse→Checkout→Logout) with synchronous send to prove steps always arrive in order;
+    - Per-key ordering guarantee explained: ordering is preserved within a partition, not across the whole topic;
+    - [how to run](src/main/java/com/vbforge/scenario_04_topic_keyed/how_to_run_scenario_04_topic_keyed.md)
 
 
 5) **scenario_05_topic_orders:**
-   - descriptions not provided yet...
+    - descriptions not provided yet...
 
 
 6) **scenario_06_e_commerce_orders_app:**
-   - descriptions not provided yet...
+    - descriptions not provided yet...
 
 
 ---
