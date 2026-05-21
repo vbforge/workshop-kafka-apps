@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Minimal Kafka (KRaft mode) - no UI
 # Java app connects on localhost:9092
 

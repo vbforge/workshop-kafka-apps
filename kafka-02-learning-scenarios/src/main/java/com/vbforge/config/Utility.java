@@ -53,7 +53,7 @@ public class Utility {
                 ? "env: KAFKA_BOOTSTRAP_SERVERS"
                 : "default (localhost:9092)";
 
-        log.info("=== Kafka Configuration ===");
+        log.info("======== Kafka Configuration ========");
         log.info("Bootstrap Servers: {}", BOOTSTRAP_SERVERS);
         log.info("Source:            {}", source);
         log.info("Active Topics:");
@@ -62,7 +62,7 @@ public class Utility {
         log.info("  - Scenario 02 (demo app):     {}", TOPIC_DEMO);
         log.info("  - Scenario 03 (load balance): {}", TOPIC_LOAD_BALANCE);
         log.info("  - Scenario 04 (keyed):        {}", TOPIC_KEYED);
-        log.info("  - Scenario 05 (orders):       {}", TOPIC_ORDERS);
+        log.info("  - Scenario 05 (manual offset):{}", TOPIC_MANUAL_OFFSET);
         log.info("  - Scenario 06 (ecommerce):    {}", TOPIC_ECOMMERCE_ORDERS);
         log.info("===========================");
     }

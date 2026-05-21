@@ -103,8 +103,8 @@ public final class Constants {
     // Auto-commit disabled; commitSync() / commitAsync() called explicitly.
     // =========================================================================
 
-    public static final String TOPIC_ORDERS             = "topic-orders";
-    public static final String CONSUMER_GROUP_ORDERS    = "consumer-group-orders";
+    public static final String TOPIC_MANUAL_OFFSET = "topic-manual-offset";
+    public static final String CONSUMER_GROUP_MANUAL_OFFSET = "consumer-group-manual-offset";
 
 
 

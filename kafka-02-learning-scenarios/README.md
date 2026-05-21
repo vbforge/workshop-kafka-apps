@@ -12,19 +12,6 @@
 - Production-ready code patterns
 - Comprehensive documentation
 
----
-
-## Project structure
-
-- **kafka-02-learning-scenarios**: 
-
-   * **config** (configurations across all scenarios)
-   * **scenario_01_simple**
-   * **scenario_02_demo_app**
-   * **scenario_03_load_balancing**
-   * **scenario_04_topic_keyed**
-   * **scenario_05_topic_orders**
-   * **scenario_06_e_commerce_orders_app**
 
 ---
 
@@ -83,8 +70,13 @@ NOTES:
     - [how to run](src/main/java/com/vbforge/scenario_04_topic_keyed/how_to_run_scenario_04_topic_keyed.md)
 
 
-5) **scenario_05_topic_orders:**
-    - descriptions not provided yet...
+5) **scenario_05_manual_offset_management:**
+    - Four consumer strategies compared side-by-side against the same `OrderProducer`;
+    - `AutoCommitConsumer` — default Kafka behavior, at-most-once delivery; crash experiment demonstrates how committed offsets cause messages to be silently skipped on restart;
+    - `ManualCommitConsumer` — `commitSync()` called only after full batch succeeds, at-least-once guarantee; `OrderProcessingException` separates business failures (don't commit, redeliver) from unexpected runtime errors (stop consumer);
+    - `BatchCommitConsumer` — commits every N records for balanced throughput; final `commitSync()` in `finally` block flushes remaining records on graceful shutdown;
+    - `PerPartitionCommitConsumer` — commits each partition's offset independently after processing; isolates failures so one partition's problem doesn't block another's progress; `offset + 1` rule explained;
+    - [how to run](src/main/java/com/vbforge/scenario_05_manual_offset_management/how_to_run_scenario_05_manual_offset_management.md)
 
 
 6) **scenario_06_e_commerce_orders_app:**
