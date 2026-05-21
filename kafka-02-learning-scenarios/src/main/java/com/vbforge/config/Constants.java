@@ -42,7 +42,8 @@ public final class Constants {
     public static final int DEFAULT_DELAY_MS         = 500;    // delay between producer sends
     public static final int DEFAULT_MESSAGE_COUNT    = 10;     // messages per producer run
     public static final int SEND_TIMEOUT_SEC         = 30;     // sync send timeout
-
+    public static final int GRACEFUL_SHUTDOWN_TIMEOUT_SEC = 10;
+    public static final int PRODUCER_CLOSE_TIMEOUT_SEC = 5;
 
 
     // =========================================================================
@@ -107,20 +108,48 @@ public final class Constants {
     public static final String CONSUMER_GROUP_MANUAL_OFFSET = "consumer-group-manual-offset";
 
 
-
     // =========================================================================
     // SCENARIO 06 — E-Commerce Orders Pipeline
-    // Full end-to-end: order placement → payment → fulfillment topics.
+    // Full end-to-end: order placement → payment → fulfillment topics. // <-- todo
     // =========================================================================
 
+    // ===== E-COMMERCE TOPIC =====
     public static final String TOPIC_ECOMMERCE_ORDERS       = "topic-ecommerce-orders";
-    public static final String TOPIC_ECOMMERCE_PAYMENTS     = "topic-ecommerce-payments";
-    public static final String TOPIC_ECOMMERCE_FULFILLMENT  = "topic-ecommerce-fulfillment";
-    public static final String TOPIC_ECOMMERCE_DLQ          = "topic-ecommerce-dlq";       // Dead Letter Queue
 
-    public static final String CONSUMER_GROUP_ECOMMERCE_ORDERS     = "consumer-group-ecommerce-orders";
-    public static final String CONSUMER_GROUP_ECOMMERCE_PAYMENTS   = "consumer-group-ecommerce-payments";
-    public static final String CONSUMER_GROUP_ECOMMERCE_FULFILL    = "consumer-group-ecommerce-fulfillment";
+    // ===== E-COMMERCE GROUPS =====
+    public static final String CONSUMER_GROUP_ECOMMERCE_PAYMENTS = "payment-service-group";
+    public static final String CONSUMER_GROUP_ECOMMERCE_INVENTORY = "inventory-service-group";
+    public static final String CONSUMER_GROUP_ECOMMERCE_NOTIFICATIONS = "notification-service-group";
+    public static final String CONSUMER_GROUP_ECOMMERCE_ANALYTICS = "analytics-service-group";
+
+    // ===== E-COMMERCE SPECIFIC =====
+    public static final int DEFAULT_ORDER_COUNT = 15;
+    public static final int ORDER_PRODUCER_DELAY_MS = 1000;
+    public static final int PAYMENT_PROCESSING_DELAY_MS = 500;
+    public static final int INVENTORY_UPDATE_DELAY_MS = 200;
+    public static final int NOTIFICATION_DELAY_MS = 100;
+
+    // ===== INVENTORY INITIAL STOCK =====
+    public static final int LAPTOP_STOCK = 50;
+    public static final int PHONE_STOCK = 100;
+    public static final int TABLET_STOCK = 75;
+    public static final int HEADPHONES_STOCK = 200;
+    public static final int MONITOR_STOCK = 30;
+
+    // ===== USERS =====
+    public static final String USER_001 = "user-001";
+    public static final String USER_002 = "user-002";
+    public static final String USER_003 = "user-003";
+    public static final String USER_004 = "user-004";
+    public static final String[] USERS    = {USER_001, USER_002, USER_003, USER_004};
+
+    // ===== PRODUCTS =====
+    public static final String LAPTOP = "laptop";
+    public static final String PHONE = "phone";
+    public static final String TABLET = "tablet";
+    public static final String HEADPHONES = "headphones";
+    public static final String MONITOR = "monitor";
+    public static final String[] PRODUCTS = {LAPTOP, PHONE, TABLET, HEADPHONES, MONITOR};
 
 
 }

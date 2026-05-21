@@ -76,7 +76,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Exec Plugin - Enables mvn exec:java -->
+            <!-- Exec Maven Plugin -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>

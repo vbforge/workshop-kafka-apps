@@ -1,7 +1,12 @@
 # Kafka Learning Scenarios
 
 * > This is a comprehensive, hands-on Java project designed to teach Apache Kafka through practical, real-world scenarios.
-* > 5 progressive scenarios across app provided (using pure Java Kafka client): basic messaging → load balancing → keyed messages → manual offsets → complete e-commerce pipeline
+* > 5+ progressive scenarios across app provided (using pure Java Kafka client): 
+  > basic messaging → 
+  > load balancing → 
+  > keyed messages → 
+  > manual offsets → 
+  > complete e-commerce pipeline
 
 ---
 
@@ -105,7 +110,7 @@ kafka-02-learning-scenarios/
        ├── InventoryService.java                               # Updates inventory
        ├── NotificationService.java                            # Sends notifications
        ├── AnalyticsService.java                               # Real-time analytics
-       └── how_to_run_ecommerce.md
+       └── how_to_run_scenario_06_e_commerce_orders_app.md
 ```
 
 ---
@@ -183,6 +188,16 @@ Each scenario includes a dedicated `how_to_run_*.md` file with:
 
 
 6) **scenario_06_e_commerce_orders_app:**
-    - descriptions not provided yet...
+    - JSON message serialization/deserialization
+    - Multi-stage order processing pipeline
+    - Multiple independent microservices (consumer groups)
+    - Real-world event-driven architecture
+    - [how to run](src/main/java/com/vbforge/scenario_06_e_commerce_orders_app/how_to_run_scenario_06_e_commerce_orders_app.md)
+    - **Components:**
+      1) `OrderService` → Produces orders
+      2) `PaymentService` → Processes payments
+      3) `InventoryService` → Updates stock
+      4) `NotificationService` → Sends confirmations
+      5) `AnalyticsService` → Tracks metrics
 
 ---
