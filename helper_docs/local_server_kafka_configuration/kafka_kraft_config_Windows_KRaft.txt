@@ -1,0 +1,123 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+################################################################################
+#                            KRAFT MODE CONFIGURATION                           #
+################################################################################
+
+############################# KRaft Cluster Identity #############################
+# The role of this server. Setting this puts us in KRaft mode
+process.roles=broker,controller
+
+# The node id associated with this instance's roles
+node.id=1
+
+# List of controller endpoints used to connect to the controller cluster
+controller.quorum.bootstrap.servers=localhost:9093
+controller.quorum.voters=1@localhost:9093
+
+############################# Network & Listeners #############################
+# The address the socket server listens on.
+# Combined nodes (i.e. those with `process.roles=broker,controller`) must list 
+# the controller listener here at a minimum.
+listeners=PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+
+# Listener name used for communication between brokers
+inter.broker.listener.name=PLAINTEXT
+
+# Hostname and port the broker will advertise to clients
+advertised.listeners=PLAINTEXT://localhost:9092
+
+# Listener names used by the controller (required in KRaft mode)
+controller.listener.names=CONTROLLER
+
+# Maps listener names to security protocols
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+
+############################# Network Threading #############################
+# Threads for receiving requests from the network and sending responses
+num.network.threads=3
+
+# Threads for processing requests, which may include disk I/O
+num.io.threads=8
+
+############################# Socket Settings #############################
+# Send buffer (SO_SNDBUF) used by the socket server
+socket.send.buffer.bytes=102400
+
+# Receive buffer (SO_RCVBUF) used by the socket server
+socket.receive.buffer.bytes=102400
+
+# Maximum size of a request (protection against OOM)
+socket.request.max.bytes=104857600
+
+############################# Log Storage #############################
+# Directories where log files are stored
+log.dirs=C:/Soft/develop/kafka_2.13-4.1.0/kafka-logs
+
+# Default number of log partitions per topic
+# More partitions = greater parallelism but more files
+num.partitions=1
+
+# Threads per data directory for log recovery and shutdown flushing
+num.recovery.threads.per.data.dir=1
+
+############################# Log Retention Policy #############################
+# Minimum age of a log file to be eligible for deletion (in hours)
+log.retention.hours=168
+
+# Maximum size of a log segment file before creating a new one
+log.segment.bytes=1073741824
+
+# Interval at which log segments are checked for deletion eligibility
+log.retention.check.interval.ms=300000
+
+# Log cleanup policy
+log.cleanup.policy=delete
+
+############################# Internal Topics Replication #############################
+# Replication factor for internal topics
+# For production, use value >= 3 for high availability
+offsets.topic.replication.factor=1
+share.coordinator.state.topic.replication.factor=1
+share.coordinator.state.topic.min.isr=1
+transaction.state.log.replication.factor=1
+transaction.state.log.min.isr=1
+
+############################# Topic Management #############################
+# Enable topic deletion
+delete.topic.enable=true
+
+# Disable automatic topic creation
+auto.create.topics.enable=false
+
+############################# Message Format #############################
+# Log message format version
+log.message.format.version=4.0
+
+############################# Log Flush Policy (Optional) #############################
+# By default, messages are written to filesystem but fsync() is done lazily
+# Uncomment these to configure aggressive flushing (impacts performance)
+
+# Force flush after N messages
+#log.flush.interval.messages=10000
+
+# Force flush after N milliseconds
+#log.flush.interval.ms=1000
+
+############################# Size-Based Retention (Optional) #############################
+# Uncomment to enable size-based retention policy
+# Segments are pruned unless remaining segments drop below this size
+#log.retention.bytes=1073741824
