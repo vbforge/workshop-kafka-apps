@@ -96,9 +96,11 @@ Conduktor UI is available at `http://localhost:8085` for visual inspection of to
 
 ---
 
-## Useful Kafka CLI Commands with Docker:
+## Useful Kafka Documentations:
 
-[check useful commands with docker](helper_docs/useful-kafka-cli-commands-with-docker.md)
+- [check useful commands with docker](helper_docs/useful-kafka-cli-commands-with-docker.md)
+- [my kafka kraft guide](helper_docs/kafka_kraft_guide_vbforge.pdf)
+- [Apache Kafka Beginners Guide](helper_docs/Apache_Kafka_Beginners_Guide.md)
 
 ---
 
