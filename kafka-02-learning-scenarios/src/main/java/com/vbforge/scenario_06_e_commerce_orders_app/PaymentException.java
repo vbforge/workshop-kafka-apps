@@ -7,41 +7,18 @@ package com.vbforge.scenario_06_e_commerce_orders_app;
 public class PaymentException extends Exception {
 
     private final String orderId;
-    private final String reason;
 
-    public PaymentException(String message) {
-        super(message);
-        this.orderId = extractOrderId(message);
-        this.reason = message;
-    }
-
-    public PaymentException(String message, String orderId) {
+    // Primary constructor — always provide orderId explicitly.
+    // Never parse it out of a message string; that's fragile and untestable.
+    public PaymentException(String orderId, String message) {
         super(message);
         this.orderId = orderId;
-        this.reason = message;
     }
 
-    private String extractOrderId(String message) {
-        // Extract order ID from message if present
-        if (message != null && message.contains("order: ")) {
-            String[] parts = message.split("order: ");
-            if (parts.length > 1) {
-                return parts[1].split(" ")[0];
-            }
-        }
-        return "unknown";
-    }
-
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public String getReason() {
-        return reason;
-    }
+    public String getOrderId() { return orderId; }
 
     @Override
     public String toString() {
-        return String.format("PaymentException{orderId='%s', reason='%s'}", orderId, reason);
+        return String.format("PaymentException{orderId='%s', message='%s'}", orderId, getMessage());
     }
 }

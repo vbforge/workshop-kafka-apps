@@ -116,6 +116,10 @@ public final class Constants {
     // ===== E-COMMERCE TOPIC =====
     public static final String TOPIC_ECOMMERCE_ORDERS       = "topic-ecommerce-orders";
 
+    // ===== E-COMMERCE DLQ =====
+    public static final String TOPIC_ECOMMERCE_DLQ     = "topic-ecommerce-orders-dlq";
+    public static final int    MAX_PAYMENT_RETRIES      = 3;
+
     // ===== E-COMMERCE GROUPS =====
     public static final String CONSUMER_GROUP_ECOMMERCE_PAYMENTS = "payment-service-group";
     public static final String CONSUMER_GROUP_ECOMMERCE_INVENTORY = "inventory-service-group";

@@ -20,6 +20,8 @@ Five independent services process orders in parallel, each with different respon
 4. NotificationService → Sends confirmations
 5. AnalyticsService → Tracks metrics
 
+![](workflow-screen.png)
+
 ### Architecture Diagram
 
 ```

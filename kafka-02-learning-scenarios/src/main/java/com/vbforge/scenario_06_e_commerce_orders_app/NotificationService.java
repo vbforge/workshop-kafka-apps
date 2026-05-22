@@ -76,7 +76,7 @@ public class NotificationService {
             }
 
         } catch (WakeupException e) {
-            logger.info("WakeupException — shutting down");
+            logger.info("WakeupException - shutting down");
         } catch (Exception e) {
             logger.error("Unexpected error: {}", e.getMessage(), e);
         } finally {
@@ -95,7 +95,7 @@ public class NotificationService {
 
     private void registerShutdownHook(Thread mainThread) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown signal received — calling consumer.wakeup()");
+            logger.info("Shutdown signal received - calling consumer.wakeup()");
             consumer.wakeup();
             try {
                 mainThread.join();
@@ -108,7 +108,7 @@ public class NotificationService {
     private void printFinalStats() {
         long runtime = System.currentTimeMillis() - startTime;
         logger.info("==========================================");
-        logger.info("NOTIFICATION SERVICE — FINAL STATISTICS:");
+        logger.info("NOTIFICATION SERVICE - FINAL STATISTICS:");
         logger.info("   Notifications sent: {}", notificationCount.get());
         logger.info("   Total runtime:      {} ms", runtime);
         logger.info("==========================================");

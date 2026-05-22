@@ -33,10 +33,27 @@ public class AnalyticsService {
 
     private static final Logger logger = LoggerFactory.getLogger(AnalyticsService.class);
 
-    private final AtomicLong totalOrders = new AtomicLong(0);
-    private final AtomicLong totalRevenue = new AtomicLong(0);
+    // BEFORE — inconsistent:
+    // private final AtomicLong totalOrders = new AtomicLong(0);
+    // private final AtomicLong totalRevenue = new AtomicLong(0);
+    // private final Map<String, Long> productSales = new HashMap<>();
+    // private final Map<String, Long> customerOrders = new HashMap<>();
+
+    // AFTER — consistent, with explanation:
+    // All state is accessed from a single consumer thread — no synchronization needed.
+    // AtomicLong replaced with plain long for consistency. If you ever add a
+    // concurrent reporter thread reading these values, switch back to AtomicLong
+    // or use synchronized accessors.
+    private long totalOrders = 0L;
+    private long totalRevenue = 0L;
     private final Map<String, Long> productSales = new HashMap<>();
     private final Map<String, Long> customerOrders = new HashMap<>();
+
+   // Update usages:
+   // totalOrders.incrementAndGet()  →  totalOrders++
+   // totalOrders.get()              →  totalOrders
+   // totalRevenue.addAndGet(x)      →  totalRevenue += x
+   // totalRevenue.get()             →  totalRevenue
 
     private KafkaConsumer<String, String> consumer;
     private long startTime;
@@ -73,8 +90,10 @@ public class AnalyticsService {
                         Order order = Utility.getObjectMapper().readValue(record.value(), Order.class);
                         updateAnalytics(order);
 
-                        long currentOrders = totalOrders.incrementAndGet();
-                        long currentRevenue = totalRevenue.addAndGet((long) (order.getTotalAmount() * 100));
+                        //long currentOrders = totalOrders.incrementAndGet();
+                        totalOrders++;
+                        //long currentRevenue = totalRevenue.addAndGet((long) (order.getTotalAmount() * 100));
+                        totalRevenue += (long) (order.getTotalAmount() * 100);
 
                         logger.info("Analytics updated | order: {} | user: {} | amount: ${}",
                                 order.getOrderId(), order.getUserId(),
@@ -91,7 +110,7 @@ public class AnalyticsService {
             }
 
         } catch (WakeupException e) {
-            logger.info("WakeupException — shutting down");
+            logger.info("WakeupException - shutting down");
         } catch (Exception e) {
             logger.error("Unexpected error: {}", e.getMessage(), e);
         } finally {
@@ -116,8 +135,10 @@ public class AnalyticsService {
      * Prints the current analytics dashboard.
      */
     private void printAnalytics() {
-        long orderCount = totalOrders.get();
-        double revenueCents = totalRevenue.get();
+        //long orderCount = totalOrders.get();
+        long orderCount = totalOrders;
+        //double revenueCents = totalRevenue.get();
+        double revenueCents = totalRevenue;
         double revenue = revenueCents / 100.0;
 
         logger.info("=======================================");
@@ -145,7 +166,7 @@ public class AnalyticsService {
 
     private void registerShutdownHook(Thread mainThread) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown signal received — calling consumer.wakeup()");
+            logger.info("Shutdown signal received - calling consumer.wakeup()");
             consumer.wakeup();
             try {
                 mainThread.join();
@@ -157,11 +178,13 @@ public class AnalyticsService {
 
     private void printFinalStats() {
         long runtime = System.currentTimeMillis() - startTime;
-        long orderCount = totalOrders.get();
-        double revenue = totalRevenue.get() / 100.0;
+        //long orderCount = totalOrders.get();
+        long orderCount = totalOrders;
+        //double revenue = totalRevenue.get() / 100.0;
+        double revenue = totalRevenue / 100.0;
 
         logger.info("==========================================");
-        logger.info("ANALYTICS SERVICE — FINAL STATISTICS:");
+        logger.info("ANALYTICS SERVICE - FINAL STATISTICS:");
         logger.info("   Total orders processed: {}", orderCount);
         logger.info("   Total revenue:          ${}", String.format("%.2f", revenue));
         logger.info("   Average order value:    ${}",

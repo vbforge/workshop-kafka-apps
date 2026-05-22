@@ -47,12 +47,18 @@ public class OrderService {
                 ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_ECOMMERCE_ORDERS, order.getUserId(), orderJson);
 
                 producer.send(record, (metadata, exception) -> {
+
+                    // Capture primitives/immutables explicitly, not the whole object
+                    //snapshotting the values at send time, not relying on the object not being mutated
+                    final String capturedOrderId = order.getOrderId();
+                    final String capturedUserId  = order.getUserId();
+
                     if (exception == null) {
                         logger.info("Order placed | id: {} | user: {} | partition: {} | offset: {}",
-                                order.getOrderId(), order.getUserId(),
+                                capturedOrderId, capturedUserId,
                                 metadata.partition(), metadata.offset());
                     } else {
-                        logger.error("Failed to place order {}: {}", order.getOrderId(), exception.getMessage());
+                        logger.error("Failed to place order {}: {}", capturedOrderId, exception.getMessage());
                     }
                 });
 

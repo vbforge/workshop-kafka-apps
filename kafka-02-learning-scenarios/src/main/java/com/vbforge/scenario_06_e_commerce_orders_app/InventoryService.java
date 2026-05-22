@@ -34,6 +34,8 @@ public class InventoryService {
 
     private static final Logger logger = LoggerFactory.getLogger(InventoryService.class);
 
+    // Not thread-safe by design — single consumer thread only.
+    // If scaling to multiple instances in the same JVM, replace with ConcurrentHashMap.
     private static final Map<String, Integer> inventory = new HashMap<>();
 
     static {
@@ -112,7 +114,7 @@ public class InventoryService {
             }
 
         } catch (WakeupException e) {
-            logger.info("WakeupException — shutting down");
+            logger.info("WakeupException - shutting down");
         } catch (Exception e) {
             logger.error("Unexpected error: {}", e.getMessage(), e);
         } finally {
@@ -130,8 +132,7 @@ public class InventoryService {
         int currentStock = inventory.getOrDefault(product, 0);
 
         if (currentStock < order.getQuantity()) {
-            throw new InsufficientStockException("Insufficient stock for " + product +
-                    " (requested: " + order.getQuantity() + ", available: " + currentStock + ")");
+            throw new InsufficientStockException(product, order.getQuantity(), currentStock);
         }
 
         inventory.put(product, currentStock - order.getQuantity());
@@ -139,7 +140,7 @@ public class InventoryService {
     }
 
     private void printInventory() {
-        logger.info("\n--- Current Inventory ---");
+        logger.info("\n---> Current Inventory <---");
         inventory.forEach((product, qty) ->
                 logger.info("{}: {} units", product, qty));
         logger.info("");
@@ -147,7 +148,7 @@ public class InventoryService {
 
     private void registerShutdownHook(Thread mainThread) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutdown signal received — calling consumer.wakeup()");
+            logger.info("Shutdown signal received - calling consumer.wakeup()");
             consumer.wakeup();
             try {
                 mainThread.join();
@@ -160,7 +161,7 @@ public class InventoryService {
     private void printFinalStats() {
         long runtime = System.currentTimeMillis() - startTime;
         logger.info("==========================================");
-        logger.info("INVENTORY SERVICE — FINAL STATISTICS:");
+        logger.info("INVENTORY SERVICE - FINAL STATISTICS:");
         logger.info("   Inventory updates: {}", processedCount.get());
         logger.info("   Updates failed:    {}", failedCount.get());
         logger.info("   Total runtime:     {} ms", runtime);
@@ -168,11 +169,33 @@ public class InventoryService {
     }
 
     /**
-     * Custom exception for inventory stock issues.
-     */
-    private static class InsufficientStockException extends Exception {
-        public InsufficientStockException(String message) {
-            super(message);
-        }
-    }
+     * Right now inventory is a HashMap.
+     * Since only one thread ever touches it in this demo it doesn't crash, but the intent is inconsistent with the atomic counters next to it.
+     * Two options:
+     *   - Option A (simple, correct for single-consumer): this version now implemented;
+     *
+     *   - Option B (defensive): Switch to ConcurrentHashMap and use its atomic compute:
+     *
+     *   private static final Map<String, Integer> inventory = new ConcurrentHashMap<>();
+     *
+     *   // In updateInventory(), need to replace the get/put pair:
+     *   inventory.compute(product, (k, currentStock) -> {
+     *     int stock = (currentStock == null) ? 0 : currentStock;
+     *     if (stock < order.getQuantity()) {
+     *         throw new RuntimeException("INSUFFICIENT:" + product +
+     *                 " requested=" + order.getQuantity() + " available=" + stock);
+     *     }
+     *       return stock - order.getQuantity();
+     *   });
+     *   // Note: compute() is atomic but the lambda can't throw checked exceptions,
+     *   // so wrap InsufficientStockException as unchecked, or keep the get/put and document the invariant.
+     * */
+
+
 }
+
+
+
+
+
+
