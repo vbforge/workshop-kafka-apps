@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka Notification Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .notification-item {
+            border-left: 4px solid #007bff;
+            margin-bottom: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+        }
+        .notification-type-INFO {
+            border-left-color: #007bff;
+        }
+        .notification-type-WARNING {
+            border-left-color: #ffc107;
+        }
+        .notification-type-ERROR {
+            border-left-color: #dc3545;
+        }
+        .notification-type-SUCCESS {
+            border-left-color: #198754;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="bi bi-bell-fill"></i> Kafka Notification Demo
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Send Notification Form -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Send Notification</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/send}" th:object="${notification}" method="post">
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message:</label>
+                            <textarea class="form-control" id="message" th:field="*{message}"
+                                      rows="3" required placeholder="Enter your notification message..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type:</label>
+                            <select class="form-control" id="type" th:field="*{type}">
+                                <option value="INFO">INFO</option>
+                                <option value="WARNING">WARNING</option>
+                                <option value="ERROR">ERROR</option>
+                                <option value="SUCCESS">SUCCESS</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            Send to Kafka Topic
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processed Notifications Display -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Processed Notifications</h5>
+                    <form th:action="@{/clear}" method="post" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-light">Clear All</button>
+                    </form>
+                </div>
+                <div class="card-body" style="max-height: 800px; overflow-y: auto;">
+                    <div th:if="${#lists.isEmpty(processedNotifications)}" class="text-muted text-center">
+                        No notifications processed yet. Send a notification to see it appear here!
+                    </div>
+                    <div th:each="notification : ${processedNotifications}"
+                         th:class="'notification-item notification-type-' + ${notification.type}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1" th:text="'Type: ' + ${notification.type}"></h6>
+                                <p class="mb-1" th:text="${notification.message}"></p>
+                                <small class="text-muted">
+                                    ID: <span th:text="${notification.id}"></span> |
+                                    Processed: <span th:text="${#temporals.format(notification.timestamp, 'HH:mm:ss')}"></span>
+                                </small>
+                            </div>
+                            <span class="badge bg-success">Processed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6>How it works:</h6>
+                <ol class="mb-0">
+                    <li>Enter a message and select a type, then click "Send to Kafka Topic"</li>
+                    <li>The message is sent to a Kafka topic called "notification-topic"</li>
+                    <li>A Kafka consumer automatically processes the message</li>
+                    <li>The processed notification appears in the right panel</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto-refresh the page every 10 seconds to show new processed notifications
+    setTimeout(function(){
+        location.reload();
+    }, 20000);
+</script>
+</body>
+</html>
