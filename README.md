@@ -22,11 +22,6 @@ The focus is on patterns that actually appear in production Java systems — rel
 | 3 | [kafka-03-echo-bot](kafka-03-echo-bot/README.md)                       | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation  (Spring Boot)                                                                                                                                                               |
 | 4 | [kafka-04-dashboard](kafka-04-dashboard/README.md)                     | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming (Spring Boot)                                                                                                                                              |
 | 5 | [kafka-05-notification-demo](kafka-05-notification-demo/README.md)     | A simple Spring Boot demo application demonstrating Apache Kafka (Kafka and Zookeeper using Docker) integration with Thymeleaf for sending and consuming notifications. (Spring Boot)                                                       |
-| 6 | [kafka-order-logger](kafka-order-logger)                               | Idempotent producer, exactly-once semantics, `ErrorHandlingDeserializer`, offset commit to DB                                                                                                                                               |
-| 7 | [kafka-shopping-cart](kafka-shopping-cart)                             | Compacted topics, event sourcing, state reconstruction, snapshotting                                                                                                                                                                        |
-| 8 | [kafka-dlq-visualizer](kafka-dlq-visualizer)                           | `@RetryableTopic`, poison pills, manual DLQ replay, dead letter queue patterns                                                                                                                                                              |
-
-Each project is independent. You can run any of them against a shared local Kafka instance on `localhost:9092`.
 
 ---
 
