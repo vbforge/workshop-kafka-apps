@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: kafka-06-producer-consumer-masterclass
+
+  kafka:
+    # Both producer and consumer connect to the same local broker
+    bootstrap-servers: localhost:9092
+
+    producer:
+      # StringSerializer for keys, JsonSerializer for values (message objects)
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      # StringDeserializer for keys; JsonDeserializer for values
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      # Trust all packages so JsonDeserializer can deserialize our MessageEvent class
+      properties:
+        spring.json.trusted.packages: "*"
+
+# ---- Custom properties used throughout the application ----
+kafka:
+  topics:
+    general: general-topic          # sync / async / keyed producer demos
+    priority: priority-topic        # message filtering by key demo
+    transactional: transactional-topic  # exactly-once / transactional demo
+  groups:
+    manual: manual-consumer-group   # low-level Consumer API (seek + poll)

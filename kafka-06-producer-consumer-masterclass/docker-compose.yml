@@ -1,0 +1,52 @@
+# ============================================================
+# Kafka in KRaft mode — no ZooKeeper required
+# Confluent cp-kafka 8.0.0 (Kafka 4.x)
+#
+# Usage:
+#   docker compose up -d       — start in background
+#   docker compose down        — stop and remove containers
+#   docker compose logs -f     — tail logs
+#
+# Java app connects on: localhost:9092
+# ============================================================
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:8.0.0
+    container_name: kafka-06-broker
+    ports:
+      - "9092:9092"    # external — your Java app connects here
+      - "19092:19092"  # internal broker-to-broker traffic
+      - "9099:9099"    # KRaft controller port
+    environment:
+      # ---- KRaft cluster identity ----
+      CLUSTER_ID: "kafka-06-masterclass-cluster"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller          # single-node: both roles in one process
+
+      # ---- Listener configuration ----
+      # INTERNAL  → used by Kafka internally (broker-to-broker)
+      # EXTERNAL  → used by clients outside Docker (your Java code)
+      # CONTROLLER → used by KRaft controller election
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9099
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:19092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9099"
+
+      # ---- Replication / transactions (single node = factor 1) ----
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      # ---- Convenience settings ----
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"         # the app also creates topics explicitly
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"    # no ACLs needed for local dev
+      KAFKA_LOG_RETENTION_HOURS: 2                    # short retention — dev environment
+
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:19092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

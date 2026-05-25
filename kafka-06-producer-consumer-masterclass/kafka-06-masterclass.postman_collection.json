@@ -1,0 +1,165 @@
+{
+  "info": {
+    "_postman_id": "kafka-06-producer-consumer-masterclass",
+    "name": "kafka-06-producer-consumer-masterclass",
+    "description": "Full test suite for kafka-06-producer-consumer-masterclass.\n\nBefore running:\n1. docker compose up -d\n2. mvn spring-boot:run\n\nApp runs on http://localhost:8080",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Producer Patterns",
+      "description": "All producer send patterns from sync to transactional",
+      "item": [
+        {
+          "name": "1. Send Sync (blocking)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/send-sync",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "send-sync"]
+            },
+            "description": "Synchronous send.\nThe HTTP response is only returned AFTER Kafka acknowledges the write.\n\nExpect:\n- HTTP 200 with a MessageEvent JSON body\n- Logs: [SYNC] topic=general-topic partition=X offset=Y\n- Listener logs: [GROUP-A], [GROUP-B], [METADATA], [REPLAY] all fire"
+          }
+        },
+        {
+          "name": "2. Send Async Callback (fire-and-forget)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/send-async-callback",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "send-async-callback"]
+            },
+            "description": "Async fire-and-forget with a callback.\nHTTP 200 is returned immediately — Kafka delivery is handled in the background.\n\nExpect:\n- HTTP 200 instantly\n- Logs (slightly after): [ASYNC-CALLBACK] OK — partition=X offset=Y\n- Same listener logs as sync"
+          }
+        },
+        {
+          "name": "3. Send Async Future (non-blocking result)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/send-async-future",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "send-async-future"]
+            },
+            "description": "Async send returning a CompletableFuture.\nSpring MVC suspends the HTTP response until the future completes — no thread blocked.\n\nExpect:\n- HTTP 200 with text: 'Delivered — partition=X offset=Y'\n- Logs: [FUTURE] Delivered to partition=X offset=Y"
+          }
+        },
+        {
+          "name": "4a. Send With Key — priority1 (high priority)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/send-with-key/priority1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "send-with-key", "priority1"]
+            },
+            "description": "Keyed send with key='priority1'.\nRouted to a deterministic partition. Consumed by the priority filter listener only.\n\nExpect:\n- HTTP 200 with MessageEvent\n- Logs: [PRIORITY-1] HIGH-PRIORITY message received: ...\n- [OTHER-PRIORITY] listener does NOT fire\n- [ERROR-HANDLER] fires (same topic, different factory) and retries 2x"
+          }
+        },
+        {
+          "name": "4b. Send With Key — normal (standard priority)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/send-with-key/normal",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "send-with-key", "normal"]
+            },
+            "description": "Keyed send with a non-priority key.\nOnly the 'other priority' consumer fires (priority-1 consumer filters this out).\n\nExpect:\n- HTTP 200 with MessageEvent\n- Logs: [OTHER-PRIORITY] Standard message received: ...\n- [PRIORITY-1] listener does NOT fire"
+          }
+        },
+        {
+          "name": "5a. Transactional — all success (commits)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/transactional/success,success,success",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "transactional", "success,success,success"]
+            },
+            "description": "Transactional send — all 3 messages committed atomically.\n\nExpect:\n- HTTP 200 with a JSON array of 3 MessageEvent objects\n- Logs: [TRANSACTIONAL] Queued message (x3), then Committed 3 message(s)\n- Consumer logs: [TRANSACTIONAL] Committed message received: ... (x3)"
+          }
+        },
+        {
+          "name": "5b. Transactional — with failure (rolls back)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/producer/transactional/success,fail",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "producer", "transactional", "success,fail"]
+            },
+            "description": "Transactional send — 'fail' key triggers a rollback.\nNOTHING is visible to consumers — not even the first 'success' message.\n\nExpect:\n- HTTP 500 (RuntimeException propagates)\n- Logs: [TRANSACTIONAL] Encountered key='fail' — rolling back...\n- Consumer logs: ZERO [TRANSACTIONAL] entries"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consumer — Manual API",
+      "description": "Low-level consumer: seek to specific partition + offset",
+      "item": [
+        {
+          "name": "6a. Read partition=0 from offset=0",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/consumer/manual?partition=0&offset=0",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "consumer", "manual"],
+              "query": [
+                {"key": "partition", "value": "0"},
+                {"key": "offset", "value": "0"}
+              ]
+            },
+            "description": "Read all messages in partition 0 starting from offset 0.\nSend a few messages via the producer endpoints first, then call this.\n\nExpect:\n- HTTP 200 with a JSON array of MessageEvent objects\n- Logs: [MANUAL-CONSUMER] Reading ... Fetched N record(s)"
+          }
+        },
+        {
+          "name": "6b. Read partition=1 from offset=0",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/consumer/manual?partition=1&offset=0",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "consumer", "manual"],
+              "query": [
+                {"key": "partition", "value": "1"},
+                {"key": "offset", "value": "0"}
+              ]
+            },
+            "description": "Read from partition 1. The general topic has 2 partitions (0 and 1).\nMessages are distributed across both depending on keys used."
+          }
+        }
+      ]
+    }
+  ]
+}
