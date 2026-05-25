@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.vbforge</groupId>
+    <artifactId>kafka-07-producer-consumer-separate-modules</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>kafka-07-producer-consumer-separate-modules</name>
+    <description>
+        Multi-module Spring Boot Kafka solution featuring separate producer-consumer architecture, KRaft broker, idempotent processing with caching,
+        and Docker Compose orchestration.
+    </description>
+
+    <modules>
+        <module>producer-app</module>
+        <module>consumer-app</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <!-- No spring-kafka, jackson, or caffeine version overrides here.        -->
+        <!-- Spring Boot BOM manages all of these. Pinning manually causes drift. -->
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Caffeine is NOT in Spring Boot BOM — explicit version required here -->
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>3.1.8</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+</project>

@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: producer-app
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true   # prevents duplicate sends on retry; requires acks=all
+        linger.ms: 1               # small batching delay (ms) before flush
+
+logging:
+  level:
+    com.vbforge.producerapp: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
