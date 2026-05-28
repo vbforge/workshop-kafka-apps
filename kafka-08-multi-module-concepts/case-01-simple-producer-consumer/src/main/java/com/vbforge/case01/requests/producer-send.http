@@ -1,0 +1,1 @@
+POST http://localhost:8081/api/producer/send?content=My first Kafka message!

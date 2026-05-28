@@ -15,15 +15,27 @@ The focus is on patterns that actually appear in production Java systems — rel
 
 ## Projects
 
-| # | Project                                                                | Key Kafka Concepts                                                                                                                                                                                                                          |
-|---|:-----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1 | [kafka-01-java-code-beginners](kafka-01-java-code-beginners/README.md) | Producers and Consumers using Java, showcasing various patterns including simple messaging, callbacks, key-based partitioning, graceful shutdown, and cooperative rebalancing. Configured with Kafka in Docker (+ Conduktor UI) (pure Java) |
-| 2 | [kafka-02-learning-scenarios](kafka-02-learning-scenarios/README.md)   | 5 progressive scenarios: basic messaging → load balancing → keyed messages → manual offsets → complete e-commerce pipeline using pure Java Kafka client  (pure Java)                                                                        |
-| 3 | [kafka-03-echo-bot](kafka-03-echo-bot/README.md)                       | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation  (Spring Boot)                                                                                                                                                               |
-| 4 | [kafka-04-dashboard](kafka-04-dashboard/README.md)                     | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming (Spring Boot)                                                                                                                                              |
-| 5 | [kafka-05-notification-demo](kafka-05-notification-demo/README.md)     | A simple Spring Boot demo application demonstrating Apache Kafka (Kafka and Zookeeper using Docker) integration with Thymeleaf for sending and consuming notifications. (Spring Boot)                                                       |
-| 6 | [kafka-06-producer-consumer-masterclass](kafka-06-producer-consumer-masterclass/README.md)     | Comprehensive Spring Boot + Kafka masterclass covering every producer/consumer pattern used in real projects: sync, async, keyed, filtered, transactional, error-handling, and manual offset control. (Spring Boot)                 |
-| 7 | [kafka-07-producer-consumer-separate-modules](kafka-07-producer-consumer-separate-modules/README.md)     | Multi-module Spring Boot Kafka solution featuring separate producer-consumer architecture, KRaft broker, idempotent processing with caching, and Docker Compose orchestration. (Spring Boot)                 |
+| # | Project                                                                                              | Key Kafka Concepts                                                                                                                                                                                                                          |
+|---|:-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | [kafka-01-java-code-beginners](kafka-01-java-code-beginners/README.md)                               | Producers and Consumers using Java, showcasing various patterns including simple messaging, callbacks, key-based partitioning, graceful shutdown, and cooperative rebalancing. Configured with Kafka in Docker (+ Conduktor UI) (pure Java) |
+| 2 | [kafka-02-learning-scenarios](kafka-02-learning-scenarios/README.md)                                 | 5 progressive scenarios: basic messaging → load balancing → keyed messages → manual offsets → complete e-commerce pipeline using pure Java Kafka client  (pure Java)                                                                        |
+| 3 | [kafka-03-echo-bot](kafka-03-echo-bot/README.md)                                                     | `KafkaTemplate`, `@KafkaListener`, auto-commit, topic creation  (Spring Boot)                                                                                                                                                               |
+| 4 | [kafka-04-dashboard](kafka-04-dashboard/README.md)                                                   | Consumer groups, partition awareness, in-memory aggregation, WebSocket streaming (Spring Boot)                                                                                                                                              |
+| 5 | [kafka-05-notification-demo](kafka-05-notification-demo/README.md)                                   | A simple Spring Boot demo application demonstrating Apache Kafka (Kafka and Zookeeper using Docker) integration with Thymeleaf for sending and consuming notifications. (Spring Boot)                                                       |
+| 6 | [kafka-06-producer-consumer-masterclass](kafka-06-producer-consumer-masterclass/README.md)           | Comprehensive Spring Boot + Kafka masterclass covering every producer/consumer pattern used in real projects: sync, async, keyed, filtered, transactional, error-handling, and manual offset control. (Spring Boot)                         |
+| 7 | [kafka-07-producer-consumer-separate-modules](kafka-07-producer-consumer-separate-modules/README.md) | Multi-module Spring Boot Kafka solution featuring separate producer-consumer architecture, KRaft broker, idempotent processing with caching, and Docker Compose orchestration. (Spring Boot)                                                |
+| 8 | [kafka-08-multi-module-concepts](kafka-08-multi-module-concepts/README.md)                           | Go through each Kafka concept with Java 17+ and Spring Boot 3.x, using Docker-based Kafka (KRaft mode). Each case is a completely independent, runnable project. (Spring Boot)                                                              |
+
+
+---
+
+## Potential projects (planning):
+
+- kafka-order-logger (Idempotent producer, exactly-once semantics, `ErrorHandlingDeserializer`, offset commit to DB)
+- kafka-shopping-cart (Compacted topics, event sourcing, state reconstruction, snapshotting)
+- kafka-dlq-visualizer (`@RetryableTopic`, poison pills, manual DLQ replay, dead letter queue patterns)
+- kafka-event-sourcing-pattern (Event sourcing pattern)
+- kafka-exactly-once-streams (Exactly-once with Kafka Streams)
 
 ---
 
