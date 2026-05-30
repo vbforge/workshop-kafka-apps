@@ -1,0 +1,1 @@
+POST http://localhost:8082/api/producer/send-custom-timeout?content=Priority message&timeoutSeconds=10

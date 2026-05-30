@@ -20,6 +20,7 @@
 
     <modules>
         <module>case-01-simple-producer-consumer</module>
+        <module>case-02-producer-sync</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 

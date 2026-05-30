@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: case-02-producer-sync
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8082
+
+kafka:
+  topic:
+    sync: case-02-topic-sync
+
+  default:
+    message: Hello from Sync Producer! (default message)
+
+  consumer:
+    groupID: case-02-consumer-group
+
+  producer:
+    # JUNIOR NOTE: This timeout controls how long .get() will block waiting
+    # for the broker ACK. If the broker doesn't respond in time → TimeoutException.
+    # In production you'd tune this based on SLA requirements.
+    send-timeout-seconds: 5
+
+logging:
+  level:
+    com.vbforge.case02: DEBUG
+    org.apache.kafka: INFO
