@@ -21,6 +21,7 @@
     <modules>
         <module>case-01-simple-producer-consumer</module>
         <module>case-02-producer-sync</module>
+        <module>case-03-producer-async</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 

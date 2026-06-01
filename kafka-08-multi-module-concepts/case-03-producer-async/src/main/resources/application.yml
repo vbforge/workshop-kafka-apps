@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: case-03-producer-async
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8083
+
+kafka:
+  topic:
+    async: case-03-topic-async
+
+  default:
+    message: Hello from Async Producer! (default message)
+
+  consumer:
+    groupID: case-03-consumer-group
+
+logging:
+  level:
+    com.vbforge.case03: DEBUG
+    org.apache.kafka: INFO
