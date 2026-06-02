@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: case-04-producer-key-based
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8084
+
+kafka:
+  topic:
+    keyed: case-04-topic-keyed
+
+  consumer:
+    groupID: case-04-consumer-group
+
+  producer:
+    send-timeout-seconds: 5
+
+logging:
+  level:
+    com.vbforge.case04: DEBUG
+    org.apache.kafka: INFO
