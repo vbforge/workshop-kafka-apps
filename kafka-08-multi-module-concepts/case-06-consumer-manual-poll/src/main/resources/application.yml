@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: case-06-consumer-manual-poll
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8086
+
+kafka:
+  topic:
+    name: case-06-topic
+
+  consumer:
+    groupID: case-06-consumer-group
+    auto-offset-reset: earliest
+
+    # JUNIOR NOTE: How long poll() blocks waiting for records if none are available.
+    # 3000ms = block up to 3s per poll cycle before returning an empty batch.
+    # Lower = more responsive to pause/resume commands but more CPU churn on idle topics.
+    # Higher = fewer poll cycles but slower reaction to control signals.
+    poll-timeout-ms: 3000
+
+    # JUNIOR NOTE: Max records returned per poll() call.
+    # Keeping this small (5) makes the manual poll loop easy to observe in logs —
+    # you see batches of 5 processed at a time rather than one massive dump.
+    max-poll-records: 5
+
+logging:
+  level:
+    com.vbforge.case06: DEBUG
+    org.apache.kafka: INFO

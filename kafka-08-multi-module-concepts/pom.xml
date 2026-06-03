@@ -24,6 +24,7 @@
         <module>case-03-producer-async</module>
         <module>case-04-producer-key-based</module>
         <module>case-05-consumer-annotation</module>
+        <module>case-06-consumer-manual-poll</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 
