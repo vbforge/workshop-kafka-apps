@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: case-05-consumer-annotation
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8085
+
+kafka:
+  topic:
+    name: case-05-topic
+
+  consumer:
+    groupID: case-05-consumer-group
+
+    # JUNIOR NOTE: concurrency = how many listener threads Spring Kafka spins up.
+    # Each thread is an independent Kafka consumer instance within the same group.
+    # Kafka assigns one partition per consumer thread — so with 3 partitions and
+    # concurrency=3, each thread owns exactly one partition.
+    # Setting concurrency higher than the partition count wastes threads (extras sit idle).
+    concurrency: 3
+
+    # JUNIOR NOTE: auto-offset-reset controls where a NEW consumer group starts reading.
+    # "earliest" → read from the very beginning of the topic (all historical messages)
+    # "latest"   → read only messages that arrive AFTER the consumer starts
+    # This only applies the first time a group ID is seen. After that, Kafka tracks
+    # committed offsets and the consumer resumes from where it left off.
+    auto-offset-reset: earliest
+
+logging:
+  level:
+    com.vbforge.case05: DEBUG
+    org.apache.kafka: INFO

@@ -23,6 +23,7 @@
         <module>case-02-producer-sync</module>
         <module>case-03-producer-async</module>
         <module>case-04-producer-key-based</module>
+        <module>case-05-consumer-annotation</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 
