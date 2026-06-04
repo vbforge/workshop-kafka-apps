@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: case-10-error-handling-retry
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8090
+
+kafka:
+  topic:
+    name: case-10-topic
+
+  consumer:
+    groupID: case-10-consumer-group
+    autoOffsetReset: earliest
+
+  # JUNIOR NOTE: ExponentialBackOff parameters.
+  # initialInterval: first wait between retries (ms)
+  # multiplier:      each subsequent wait = previous × multiplier
+  # maxInterval:     cap — backoff never exceeds this value (ms)
+  # maxElapsedTime:  total retry budget (ms) — stop retrying after this wall-clock time
+  #
+  # With these values the retry schedule is:
+  #   Attempt 1 (original) → fails
+  #   Wait 500ms
+  #   Attempt 2 (retry 1)  → fails → wait 500 × 2.0 = 1000ms
+  #   Attempt 3 (retry 2)  → fails → wait 1000 × 2.0 = 2000ms
+  #   Attempt 4 (retry 3)  → fails → wait 2000 × 2.0 = 4000ms
+  #   maxElapsedTime=10000ms → after ~7500ms total elapsed, budget exhausted → recovery
+  retry:
+    initialIntervalMs: 500
+    multiplier: 2.0
+    maxIntervalMs: 4000
+    maxElapsedTimeMs: 10000
+
+logging:
+  level:
+    com.vbforge.case10: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO
