@@ -27,6 +27,7 @@
         <module>case-06-consumer-manual-poll</module>
         <module>case-07-consumer-groups</module>
         <module>case-08-consumer-offset-management</module>
+        <module>case-09-error-handling-basic</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 

@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: case-09-error-handling-basic
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8089
+
+kafka:
+  topic:
+    name: case-09-topic
+
+  consumer:
+    groupID: case-09-consumer-group
+    autoOffsetReset: earliest
+
+  # JUNIOR NOTE: DefaultErrorHandler config — number of immediate delivery attempts
+  # before the record is considered "failed" and sent to the error handler's recovery action.
+  # maxAttempts=3 means: 1 original attempt + 2 retries = 3 total.
+  # No backoff between retries at this level — that's case-10's territory.
+  error:
+    maxAttempts: 3
+
+logging:
+  level:
+    com.vbforge.case09: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO
