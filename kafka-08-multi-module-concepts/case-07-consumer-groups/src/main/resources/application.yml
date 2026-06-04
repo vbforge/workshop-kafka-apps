@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: case-07-consumer-groups
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8087
+
+kafka:
+  topic:
+    name: case-07-topic
+
+  # JUNIOR NOTE: Three independent consumer groups on the SAME topic.
+  # Each group gets its own FULL copy of every message — groups don't share.
+  # This is how Kafka enables fan-out: one event, many independent consumers.
+  #
+  #   analytics-group → pretends to do analytics (counts, aggregations)
+  #   audit-group     → pretends to write an audit log
+  #   notify-group    → pretends to send notifications
+  #
+  # All three receive the exact same messages from the same topic.
+  # They maintain completely separate committed offsets.
+  consumer:
+    analyticsGroupId: case-07-analytics-group
+    auditGroupId:     case-07-audit-group
+    notifyGroupId:    case-07-notify-group
+    concurrency: 3
+    autoOffsetReset: earliest
+
+logging:
+  level:
+    com.vbforge.case07: DEBUG
+    org.apache.kafka: INFO
