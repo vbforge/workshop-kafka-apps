@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: case-08-consumer-offset-management
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8088
+
+kafka:
+  topic:
+    name: case-08-topic
+
+  consumer:
+    groupID: case-08-consumer-group
+    poll-timeout-ms: 3000
+    max-poll-records: 5
+
+    # JUNIOR NOTE: "none" is the third auto-offset-reset option — it throws an
+    # exception if no committed offset exists for the group.
+    # We start with "earliest" so the first run works, but the theory doc covers "none".
+    auto-offset-reset: earliest
+
+logging:
+  level:
+    com.vbforge.case08: DEBUG
+    org.apache.kafka: INFO

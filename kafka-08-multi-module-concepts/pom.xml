@@ -26,6 +26,7 @@
         <module>case-05-consumer-annotation</module>
         <module>case-06-consumer-manual-poll</module>
         <module>case-07-consumer-groups</module>
+        <module>case-08-consumer-offset-management</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 
