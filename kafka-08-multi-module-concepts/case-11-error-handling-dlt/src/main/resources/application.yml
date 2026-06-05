@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: case-11-error-handling-dlt
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8091
+
+kafka:
+  topic:
+    # Main topic — normal messages arrive here
+    name: case-11-topic
+    # Dead Letter Topic — failed messages land here after retries exhausted
+    # Convention: <original-topic>.DLT  (Spring uses this naming by default)
+    dlt: case-11-topic.DLT
+
+  consumer:
+    groupID: case-11-consumer-group
+    dltGroupID: case-11-dlt-consumer-group
+    autoOffsetReset: earliest
+
+  retry:
+    initialIntervalMs: 300
+    multiplier: 2.0
+    maxIntervalMs: 2000
+    maxElapsedTimeMs: 5000
+
+logging:
+  level:
+    com.vbforge.case11: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO
