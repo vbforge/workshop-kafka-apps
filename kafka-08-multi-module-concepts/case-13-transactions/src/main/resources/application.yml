@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: case-13-transactions
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8093
+
+kafka:
+  topic:
+    # Source topic — orders arrive here
+    orders: case-13-orders-topic
+    # Processed topic — transactional producer writes here inside the transaction
+    processed: case-13-processed-topic
+    # Rollback probe topic — messages sent here are rolled back to demonstrate atomicity
+    probe: case-13-probe-topic
+
+  consumer:
+    groupID: case-13-consumer-group
+    # JUNIOR NOTE: isolation.level=read_committed is the critical consumer config for transactions.
+    # Without it the consumer reads UNCOMMITTED records — it sees in-flight messages
+    # from transactions that may still roll back. That breaks exactly-once semantics.
+    # read_committed = consumer only sees records from COMMITTED transactions.
+    # read_uncommitted = default, sees everything including rolled-back records.
+    isolationLevel: read_committed
+    autoOffsetReset: earliest
+
+  producer:
+    # JUNIOR NOTE: transactional.id is what makes a producer "transactional".
+    # The broker uses this ID to track the producer's transaction state across restarts.
+    # It must be unique per producer instance in production
+    # (e.g. "txn-orders-processor-${instance.id}").
+    # For the demo we use a static ID — fine for a single-instance case.
+    transactionalId: case-13-tx-producer
+
+logging:
+  level:
+    com.vbforge.case13: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO
