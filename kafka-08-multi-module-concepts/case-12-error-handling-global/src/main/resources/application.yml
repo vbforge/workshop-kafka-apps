@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: case-12-error-handling-global
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8092
+
+kafka:
+  topic:
+    orders: case-12-orders-topic
+    payments: case-12-payments-topic
+    notifications: case-12-notifications-topic
+    # All three topics share one DLT
+    dlt: case-12-global.DLT
+
+  consumer:
+    ordersGroupID: case-12-orders-group
+    paymentsGroupID: case-12-payments-group
+    notificationsGroupID: case-12-notifications-group
+    dltGroupID: case-12-dlt-group
+    autoOffsetReset: earliest
+
+  retry:
+    initialIntervalMs: 300
+    multiplier: 2.0
+    maxIntervalMs: 2000
+    maxElapsedTimeMs: 5000
+
+logging:
+  level:
+    com.vbforge.case12: DEBUG
+    org.apache.kafka: WARN
+    org.springframework.kafka: INFO

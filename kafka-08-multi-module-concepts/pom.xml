@@ -30,6 +30,7 @@
         <module>case-09-error-handling-basic</module>
         <module>case-10-error-handling-retry</module>
         <module>case-11-error-handling-dlt</module>
+        <module>case-12-error-handling-global</module>
         <!-- next module in developing process (will be added next)       -->
     </modules>
 
