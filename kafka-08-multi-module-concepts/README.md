@@ -61,14 +61,11 @@ kafka-08-multi-module-concepts/
 ├── case-12-error-handling-global/       # DefaultErrorHandler
 │
 ├── case-13-transactions/                # Exactly-once + @Transactional
-├── case-14-observability/               # Metrics + health + tracing
-├── case-15-validation-dto/              # Bean validation + DTO
-├── case-16-batch-processing/            # High throughput batch
 │
-├── case-17-bonus-messaging-patterns/    # Request-reply + filtering
-├── case-18-bonus-serialization-streams/ # Avro + exactly-once + streams
-├── case-19-bonus-ops/                   # Multi-cluster + perf + security
-└── case-20-testcontainers/              # Integration tests 
+├── case-14-validation-dto/              # Bean validation + DTO
+├── case-15-batch-processing/            # High throughput batch
+├── case-16-messaging-patterns/          # Request-reply + filtering
+└── case-17-testcontainers/              # Integration tests
 ```
 
 ---
@@ -90,13 +87,10 @@ kafka-08-multi-module-concepts/
 | 11 | [**case-11-error-handling-dlt**](case-11-error-handling-dlt/README.md)                   | Dead Letter Topic, `@DltHandler`, poison pills, DLT monitoring                                                                      |
 | 12 | [**case-12-error-handling-global**](case-12-error-handling-global/README.md)             | `DefaultErrorHandler`, error router, fallbacks, error topic                                                                         |
 | 13 | [**case-13-transactions**](case-13-transactions/README.md)                               | Transactions, exactly-once semantics, `@Transactional`, idempotent producer, rollback                                               |
-| 14 | [**case-14-observability**](case-14-observability/README.md)                             | Observability, Micrometer metrics, health indicators, tracing, MDC logging                                                          |
-| 15 | [**case-15-validation-dto**](case-15-validation-dto/README.md)                           | DTO validation, Bean Validation (JSR-380), custom validators, error responses                                                       |
-| 16 | [**case-16-batch-processing**](case-16-batch-processing/README.md)                       | Batch processing, `MAX_POLL_RECORDS`, batch listener, manual batch commit                                                           |
-| 17 | [**case-17-bonus-messaging-patterns**](case-17-bonus-messaging-patterns/README.md)       | Request-reply (RPC over Kafka), correlation IDs, temporary topics, message filtering, `@Filter`, header-based routing               |
-| 18 | [**case-18-bonus-serialization-streams**](case-18-bonus-serialization-streams/README.md) | Avro + Schema Registry, schema evolution, Kafka Streams (KTables, joins, windowing), exactly-once (KIP-98), transactional APIs      |
-| 19 | [**case-19-bonus-ops**](case-19-bonus-ops/README.md)                                     | Multi-cluster (MirrorMaker), performance testing, throughput tuning, compression, security (SSL/TLS, SASL, ACLs), failover patterns |
-| 20 | [**case-20-testcontainers**](case-20-testcontainers/README.md)                           | Testcontainers, integration tests with real Kafka                                                                                   |
+| 14 | [**case-14-validation-dto**](case-14-validation-dto/README.md)                           | DTO validation, Bean Validation (JSR-380), custom validators, error responses                                                       |
+| 15 | [**case-15-batch-processing**](case-15-batch-processing/README.md)                       | Batch processing, `MAX_POLL_RECORDS`, batch listener, manual batch commit                                                           |
+| 16 | [**case-16-messaging-patterns**](case-16-messaging-patterns/README.md)                   | Request-reply (RPC over Kafka), correlation IDs, temporary topics, message filtering, `@Filter`, header-based routing               |
+| 17 | [**case-17-testcontainers**](case-17-testcontainers/README.md)                           | Testcontainers, integration tests with real Kafka                                                                                   |
 
 ---
 
@@ -186,3 +180,4 @@ services:
       timeout: 5s
       retries: 10
 ```
+---
