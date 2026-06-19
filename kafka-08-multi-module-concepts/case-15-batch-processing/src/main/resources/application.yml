@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: case-15-batch-processing
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8095
+
+kafka:
+  topic:
+    events: case-15-events
+
+  consumer:
+    groupID: case-15-consumer-group
+    auto-offset-reset: earliest
+    # JUNIOR NOTE: max-poll-records is THE core tuning knob for batch processing.
+    # It limits how many records a single poll() call returns.
+    # Larger = higher throughput, larger at-risk window on failure.
+    # Smaller = more commits, smaller failure window, higher overhead.
+    # We start at 50 to make batches visible; in production 100-500 is common.
+    max-poll-records: 50
+    # JUNIOR NOTE: max-poll-interval-ms must be > your typical batch processing time.
+    # If processing 50 records takes longer than this, Kafka removes you from the group
+    # and triggers a rebalance. Keep it at least 2-3x your p99 batch processing time.
+    max-poll-interval-ms: 120000
+
+logging:
+  level:
+    com.vbforge.case15: DEBUG
+    org.apache.kafka: INFO
