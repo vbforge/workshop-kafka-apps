@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: case-16-messaging-patterns
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8816
+
+kafka:
+  topics:
+    request: case-16-request-topic
+    reply: case-16-reply-topic
+    routed-priority: case-16-routed-priority-topic
+    routed-standard: case-16-routed-standard-topic
+
+  consumer:
+    groupID: case-16-consumer-group
+    reply-groupID: case-16-reply-consumer-group
+    request-timeout-ms: 10000
+
+logging:
+  level:
+    com.vbforge.case16: DEBUG
+    org.apache.kafka: INFO
