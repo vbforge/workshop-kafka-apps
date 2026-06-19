@@ -32,7 +32,10 @@
         <module>case-11-error-handling-dlt</module>
         <module>case-12-error-handling-global</module>
         <module>case-13-transactions</module>
-        <!-- next module in developing process (will be added next)       -->
+        <module>case-14-validation-dto</module>
+        <module>case-15-batch-processing</module>
+        <module>case-16-messaging-patterns</module>
+        <module>case-17-testcontainers</module>
     </modules>
 
     <properties>

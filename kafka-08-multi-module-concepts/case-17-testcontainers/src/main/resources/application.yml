@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: case-17-testcontainers
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8817
+
+kafka:
+  topics:
+    events: case-17-events-topic
+    processed: case-17-processed-topic
+
+  consumer:
+    groupID: case-17-consumer-group
+
+logging:
+  level:
+    com.vbforge.case17: DEBUG
+    org.apache.kafka: INFO
+    org.testcontainers: INFO
