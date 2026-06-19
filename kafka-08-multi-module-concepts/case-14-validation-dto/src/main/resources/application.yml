@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: case-14-validation-dto
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8094
+
+kafka:
+  topic:
+    events: case-14-events
+    # JUNIOR NOTE: rejected messages go to a separate topic so they're observable.
+    # In production this would be wired to alerting / DLT handling.
+    rejected: case-14-rejected
+
+  producer:
+    acks: "1"
+
+  consumer:
+    groupID: case-14-consumer-group
+    auto-offset-reset: earliest
+
+logging:
+  level:
+    com.vbforge.case14: DEBUG
+    org.apache.kafka: INFO
