@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: kafka-08-simple-producer-consumer
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8081
+
+kafka:
+  topic:
+    test: case-topic
+    test-string: case-topic-string
+
+  default:
+    message: Hello from Kafka! (default message)
+
+  consumer:
+    groupID: case-consumer-group
+
+logging:
+  level:
+    com.vbforge.kafka08: DEBUG
+    org.apache.kafka: INFO

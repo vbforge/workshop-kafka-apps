@@ -24,7 +24,7 @@ The focus is on patterns that actually appear in production Java systems — rel
 | 5 | [kafka-05-notification-demo](kafka-05-notification-demo/README.md)                                   | A simple Spring Boot demo application demonstrating Apache Kafka (Kafka and Zookeeper using Docker) integration with Thymeleaf for sending and consuming notifications. (Spring Boot)                                                       |
 | 6 | [kafka-06-producer-consumer-masterclass](kafka-06-producer-consumer-masterclass/README.md)           | Comprehensive Spring Boot + Kafka masterclass covering every producer/consumer pattern used in real projects: sync, async, keyed, filtered, transactional, error-handling, and manual offset control. (Spring Boot)                         |
 | 7 | [kafka-07-producer-consumer-separate-modules](kafka-07-producer-consumer-separate-modules/README.md) | Multi-module Spring Boot Kafka solution featuring separate producer-consumer architecture, KRaft broker, idempotent processing with caching, and Docker Compose orchestration. (Spring Boot)                                                |
-| 8 | [kafka-08-multi-module-concepts](kafka-08-multi-module-concepts/README.md)                           | Go through each Kafka concept with Java 17+ and Spring Boot 3.x, using Docker-based Kafka (KRaft mode). Each case is a completely independent, runnable project. (Spring Boot)                                                              |
+| 8 | [kafka-08-simple-producer-consumer](kafka-08-simple-producer-consumer/README.md)                     | Basic producer-consumer, JSON serialization, topic auto-creation                                                                |
 
 
 ---
