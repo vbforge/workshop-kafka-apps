@@ -1,0 +1,30 @@
+{
+  "autoModules": true,
+  "tags": ["java", "spring-boot", "maven-multimodule", "docker", "kafka"],
+  "projects": [
+    { "name": "kafka-01-java-code-beginners", "path": "kafka-01-java-code-beginners",
+      "description": "Simple kafka code and scripts",
+      "tags": ["kafka", "docker"] },
+    { "name": "kafka-02-learning-scenarios", "path": "kafka-02-learning-scenarios",
+      "description": "Some scenarios to investigate Kafka",
+      "tags": ["kafka"] },
+    { "name": "kafka-03-echo-bot", "path": "kafka-03-echo-bot",
+      "description": "Kafka App to show producer/consumer in simple way",
+      "tags": ["kafka", "spring-boot"] },
+    { "name": "kafka-04-dashboard", "path": "kafka-04-dashboard",
+      "description": "Dashboard built on top of Kafka messages",
+      "tags": ["kafka", "dashboard"] },
+    { "name": "kafka-05-notification-demo", "path": "kafka-05-notification-demo",
+      "description": "Notification demo powered by Kafka",
+      "tags": ["kafka", "notifications"] },
+    { "name": "kafka-06-producer-consumer-masterclass", "path": "kafka-06-producer-consumer-masterclass",
+      "description": "In-depth producer/consumer masterclass",
+      "tags": ["kafka", "producer-consumer"] },
+    { "name": "kafka-07-producer-consumer-separate-modules", "path": "kafka-07-producer-consumer-separate-modules",
+      "description": "Producer and consumer split into separate modules",
+      "tags": ["kafka", "producer-consumer", "maven-multimodule"] },
+    { "name": "kafka-08-simple-producer-consumer", "path": "kafka-08-simple-producer-consumer",
+      "description": "Minimal producer/consumer example",
+      "tags": ["kafka", "producer-consumer"] }
+  ]
+}
