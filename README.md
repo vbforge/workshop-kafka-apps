@@ -3,6 +3,8 @@
 > Hands-on Kafka workshop built with **Spring Boot 3**, **Thymeleaf**, and **Docker** (KRaft mode — no ZooKeeper).  
 > Each project is a standalone application targeting a real-world Kafka pattern, progressing from zero to production-ready knowledge.
 
+- [check on the page](https://vbforge.github.io/#/r/workshop-kafka-apps)
+
 ---
 
 ## Goal
